@@ -1,4 +1,14 @@
-# --- Python ---
+# --- Node / Workspaces ---
+node_modules/
+dist/
+backend/dist/
+frontend/dist/
+.vite/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+
+# --- Python / AI Service ---
 __pycache__/
 *.py[cod]
 .venv/
@@ -8,29 +18,28 @@ env/
 .coverage
 htmlcov/
 
-# --- Node ---
-node_modules/
-dist/
-.vite/
-coverage/
-
-# --- Env / secrets ---
+# --- Environment & Secrets ---
 .env
 .env.local
+.env.*.local
+!.env.example
+backend/.env
+frontend/.env
+ai-service/.env
 
-# --- Runtime ---
+# --- Testing, MCP & Tooling ---
+test-results/
+playwright-report/
+.playwright-mcp/
 *.log
-backend/.venv/
-frontend/.vite/
 
-# --- Tooling / OS ---
+# --- Documentation, Analysis & Research ---
+*.md
+docs/
+research/
+
+# --- OS ---
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
-.playwright-mcp/
-
-# --- Audit artifacts (generated, not committed) ---
-security-audit/
-frontend/scripts/*.png
-frontend/audit_screenshots/
-frontend/redesign_screenshots/

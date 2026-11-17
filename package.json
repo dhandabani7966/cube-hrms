@@ -1,0 +1,22 @@
+{
+  "name": "cubeai-hrms-root",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "e2e"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:frontend": "npm --workspace=frontend run build",
+    "build:backend": "npm --workspace=backend run build",
+    "dev:frontend": "npm --workspace=frontend run dev",
+    "dev:backend": "npm --workspace=backend run start:dev",
+    "test": "npm run test --workspaces --if-present",
+    "test:frontend": "npm --workspace=frontend run test",
+    "test:backend": "npm --workspace=backend run test",
+    "test:e2e": "npm --workspace=e2e test",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}

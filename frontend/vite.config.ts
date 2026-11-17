@@ -12,14 +12,42 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/ai': {
+        target: 'http://localhost:8001',
         changeOrigin: true,
       },
     },
   },
   preview: {
-    port: 4173,
+    port: 5173,
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/react-dom') || id.includes('node_modules/react/')) {
+            return 'vendor-react'
+          }
+          if (
+            id.includes('node_modules/react-router-dom') ||
+            id.includes('node_modules/react-router/')
+          ) {
+            return 'vendor-router'
+          }
+          if (id.includes('node_modules/@tanstack/react-query')) {
+            return 'vendor-query'
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'vendor-icons'
+          }
+        },
+      },
+    },
   },
 })

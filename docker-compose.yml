@@ -1,94 +1,130 @@
-name: cube-hrms
+networks:
+  cubeai-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ollama_models:
+    driver: local
 
 services:
-  db:
-    image: pgvector/pgvector:pg16
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-cube}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-cube_hrms}
-      APP_DB_USER: ${APP_DB_USER:-cube_app}
-      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?APP_DB_PASSWORD is required}
+  postgres:
+    image: postgres:16-alpine
+    container_name: cubeai-postgres
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cubeai_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cubeai_secret_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-cubeai_hrms}
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cube} -d ${POSTGRES_DB:-cube_hrms}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cubeai_admin} -d ${POSTGRES_DB:-cubeai_hrms}"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 5
+    networks:
+      - cubeai-network
 
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--appendonly", "yes"]
+    container_name: cubeai-redis
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:6380:6379"
+      - "6379:6379"
     volumes:
-      - redisdata:/data
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
-      timeout: 3s
-      retries: 20
+      timeout: 5s
+      retries: 5
+    networks:
+      - cubeai-network
 
-  # Object storage is a Wave 2 dependency; start it with:
-  #   docker compose --profile storage up -d minio
-  minio:
-    profiles: ["storage"]
-    image: minio/minio:latest
-    command: ["server", "/data", "--console-address", ":9001"]
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-cube}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY is required}
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cubeai-ollama
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:9010:9000"
-      - "127.0.0.1:9011:9001"
+      - "11434:11434"
     volumes:
-      - miniodata:/data
+      - ollama_models:/root/.ollama
+    networks:
+      - cubeai-network
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: cubeai-ai-service
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      PORT: 8001
+      HOST: 0.0.0.0
+      OLLAMA_BASE_URL: http://ollama:11434
+      AI_MOCK_FALLBACK: "true"
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY:-cubeai_internal_secret_key_2026}
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      - ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - cubeai-network
 
   backend:
     build:
-      context: ./backend
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${APP_DB_USER:-cube_app}:${APP_DB_PASSWORD}@db:5432/${POSTGRES_DB:-cube_hrms}
-      REDIS_URL: redis://redis:6379/0
-      MINIO_ENDPOINT: minio:9000
-      CORS_ORIGINS: '["http://localhost:8081","http://127.0.0.1:8081"]'
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: cubeai-backend
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-  worker:
-    build:
-      context: ./backend
-    env_file: .env
+      - "3001:3001"
     environment:
-      DATABASE_URL: postgresql+asyncpg://${APP_DB_USER:-cube_app}:${APP_DB_PASSWORD}@db:5432/${POSTGRES_DB:-cube_hrms}
-      REDIS_URL: redis://redis:6379/0
+      PORT: 3001
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${POSTGRES_USER:-cubeai_admin}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-cubeai_secret_pass}
+      DB_NAME: ${POSTGRES_DB:-cubeai_hrms}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      AI_SERVICE_URL: http://ai-service:8001
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY:-cubeai_internal_secret_key_2026}
+      JWT_SECRET: ${JWT_SECRET:-super_secure_jwt_secret_hrms_2026}
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["celery", "-A", "app.celery_app.celery_app", "worker", "--loglevel=info"]
+      ai-service:
+        condition: service_started
+    networks:
+      - cubeai-network
 
   frontend:
     build:
-      context: ./frontend
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    container_name: cubeai-frontend
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:8081:80"
+      - "80:80"
+      - "5173:80"
     depends_on:
       - backend
-
-volumes:
-  pgdata:
-  redisdata:
-  miniodata:
+    networks:
+      - cubeai-network

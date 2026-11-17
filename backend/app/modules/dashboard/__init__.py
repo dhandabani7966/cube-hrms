@@ -1,1 +1,0 @@
-"""Role-aware dashboard endpoints."""

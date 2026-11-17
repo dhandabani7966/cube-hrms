@@ -1,18 +1,30 @@
-FROM python:3.13-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY pyproject.toml ./
-COPY app ./app
-COPY alembic ./alembic
-COPY alembic.ini ./
+COPY package.json package-lock.json* ./
+COPY backend/package.json ./backend/
 
-RUN pip install .
+RUN npm install
 
-EXPOSE 8000
+COPY backend/ ./backend/
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+WORKDIR /app/backend
+RUN npm run build
+
+FROM node:22-alpine AS runner
+
+WORKDIR /app/backend
+
+ENV NODE_ENV=production
+
+COPY package.json package-lock.json* /app/
+COPY backend/package.json ./
+
+RUN npm install --omit=dev
+
+COPY --from=builder /app/backend/dist ./dist
+
+EXPOSE 3001
+
+CMD ["node", "dist/main.js"]
