@@ -281,6 +281,25 @@ export function EmployeesView() {
     loadData();
   }, []);
 
+  // Auto-close any open dropdown or popover card when touching or clicking anywhere outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setIsThreeDotsOpen(false);
+        setIsViewMenuOpen(false);
+        setIsScopeMenuOpen(false);
+        setIsProcessMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, []);
+
   // Filtered employees for Employee View
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
@@ -700,9 +719,13 @@ export function EmployeesView() {
           <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
             {/* Left Controls: View selector & Edit */}
             <div className="flex items-center gap-3">
-              <div className="relative">
+              <div className="relative" data-dropdown="viewScope">
                 <button
-                  onClick={() => setIsViewMenuOpen(!isViewMenuOpen)}
+                  onClick={() => {
+                    setIsViewMenuOpen((prev) => !prev);
+                    setIsScopeMenuOpen(false);
+                    setIsThreeDotsOpen(false);
+                  }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition cursor-pointer ${
                     isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
                   }`}
@@ -744,9 +767,13 @@ export function EmployeesView() {
             {/* Right Controls: Scope, Add Employee, Full View, Filter, Three Dots */}
             <div className="flex items-center gap-2">
               {/* Scope Dropdown */}
-              <div className="relative">
+              <div className="relative" data-dropdown="dataScope">
                 <button
-                  onClick={() => setIsScopeMenuOpen(!isScopeMenuOpen)}
+                  onClick={() => {
+                    setIsScopeMenuOpen((prev) => !prev);
+                    setIsViewMenuOpen(false);
+                    setIsThreeDotsOpen(false);
+                  }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition cursor-pointer ${
                     isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
                   }`}
@@ -812,9 +839,13 @@ export function EmployeesView() {
               </button>
 
               {/* Three Dots Menu */}
-              <div className="relative">
+              <div className="relative" data-dropdown="threeDots">
                 <button
-                  onClick={() => setIsThreeDotsOpen(!isThreeDotsOpen)}
+                  onClick={() => {
+                    setIsThreeDotsOpen((prev) => !prev);
+                    setIsViewMenuOpen(false);
+                    setIsScopeMenuOpen(false);
+                  }}
                   className={`p-1.5 rounded-lg border transition cursor-pointer ${
                     isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400 hover:text-white' : 'bg-white border-[#CBD5E1] text-[#5E7174] hover:text-[#0B1730]'
                   }`}
@@ -2116,9 +2147,14 @@ export function EmployeesView() {
           <div className="flex items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-2 text-xs">
               <span className={`font-semibold ${isDark ? 'text-gray-300' : 'text-[#475569]'}`}>Process:</span>
-              <div className="relative">
+              <div className="relative" data-dropdown="hrProcess">
                 <button
-                  onClick={() => setIsProcessMenuOpen(!isProcessMenuOpen)}
+                  onClick={() => {
+                    setIsProcessMenuOpen((prev) => !prev);
+                    setIsThreeDotsOpen(false);
+                    setIsViewMenuOpen(false);
+                    setIsScopeMenuOpen(false);
+                  }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-semibold min-w-[150px] justify-between cursor-pointer ${
                     isDark ? 'bg-[#1E293B] border-[#334155] text-white' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
                   }`}
