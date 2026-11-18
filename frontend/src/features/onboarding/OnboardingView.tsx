@@ -3959,48 +3959,63 @@ export function OnboardingView() {
 
               {/* Collapsible: Fields (All 27 Fields Checklist with Select All & Clear All) */}
               <div className="space-y-2 pt-2 border-t border-gray-800">
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setIsFieldsListOpen(!isFieldsListOpen)}
-                    className="flex items-center gap-1.5 font-bold tracking-wide uppercase text-[11px] text-gray-400 hover:text-gray-200 cursor-pointer"
-                  >
-                    <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isFieldsListOpen ? 'rotate-0' : '-rotate-90'}`} />
-                    <span>Fields</span>
-                  </button>
+                {(() => {
+                  const isAllFieldsSelected = ALL_FIELD_NAMES.every(f => visibleColumns[f] === true);
+                  const isAllFieldsCleared = ALL_FIELD_NAMES.every(f => visibleColumns[f] === false);
 
-                  {/* Select All & Clear All Quick Buttons (User Reference Screenshot) */}
-                  <div className="flex items-center gap-1.5 text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allOn: Record<string, boolean> = {};
-                        ALL_FIELD_NAMES.forEach(f => { allOn[f] = true; });
-                        setVisibleColumns(allOn);
-                      }}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer border ${
-                        isDark ? 'bg-[#222] hover:bg-[#2c2c2c] text-blue-400 border-[#3a3a3a]' : 'bg-blue-50 hover:bg-blue-100 text-blue-600 border-blue-200'
-                      }`}
-                    >
-                      <CheckSquare className="h-3 w-3" />
-                      <span>Select All</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const allOff: Record<string, boolean> = {};
-                        ALL_FIELD_NAMES.forEach(f => { allOff[f] = false; });
-                        setVisibleColumns(allOff);
-                      }}
-                      className={`flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold transition cursor-pointer border ${
-                        isDark ? 'bg-[#222] hover:bg-[#2c2c2c] text-gray-300 border-[#3a3a3a]' : 'bg-slate-100 hover:bg-slate-200 text-gray-700 border-[#D9E2F2]'
-                      }`}
-                    >
-                      <Square className="h-3 w-3" />
-                      <span>Clear All</span>
-                    </button>
-                  </div>
-                </div>
+                  return (
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setIsFieldsListOpen(!isFieldsListOpen)}
+                        className="flex items-center gap-1.5 font-bold tracking-wide uppercase text-[11px] text-gray-400 hover:text-gray-200 cursor-pointer"
+                      >
+                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isFieldsListOpen ? 'rotate-0' : '-rotate-90'}`} />
+                        <span>Fields</span>
+                      </button>
+
+                      {/* Select All & Clear All Quick Buttons (Dynamic selection styling per user reference) */}
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allOn: Record<string, boolean> = {};
+                            ALL_FIELD_NAMES.forEach(f => { allOn[f] = true; });
+                            setVisibleColumns(allOn);
+                          }}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer border shadow-xs ${
+                            isAllFieldsSelected
+                              ? 'bg-blue-50 border-blue-300 text-blue-600 dark:bg-blue-950/40 dark:border-blue-700 dark:text-blue-400'
+                              : isDark
+                              ? 'bg-[#222] hover:bg-[#2c2c2c] text-gray-300 border-[#3a3a3a]'
+                              : 'bg-white hover:bg-slate-50 text-gray-700 border-gray-200'
+                          }`}
+                        >
+                          <CheckSquare className={`h-3.5 w-3.5 ${isAllFieldsSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
+                          <span>Select All</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allOff: Record<string, boolean> = {};
+                            ALL_FIELD_NAMES.forEach(f => { allOff[f] = false; });
+                            setVisibleColumns(allOff);
+                          }}
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition cursor-pointer border shadow-xs ${
+                            isAllFieldsCleared
+                              ? 'bg-blue-50 border-blue-300 text-blue-600 dark:bg-blue-950/40 dark:border-blue-700 dark:text-blue-400'
+                              : isDark
+                              ? 'bg-[#222] hover:bg-[#2c2c2c] text-gray-300 border-[#3a3a3a]'
+                              : 'bg-white hover:bg-slate-50 text-gray-700 border-gray-200'
+                          }`}
+                        >
+                          <Square className={`h-3.5 w-3.5 ${isAllFieldsCleared ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`} />
+                          <span>Clear All</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {isFieldsListOpen && (
                   <div className="space-y-1.5 pl-1 max-h-72 overflow-y-auto pr-1">
