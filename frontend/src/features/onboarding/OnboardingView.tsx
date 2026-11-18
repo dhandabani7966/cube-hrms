@@ -85,6 +85,7 @@ const ALL_FIELD_NAMES = [
   'Current Salary',
   'Additional Information',
   'Offer Letter',
+  'Proposed Joining Date',
   'Tentative Joining Date',
   'Added By',
   'Added Time',
@@ -102,6 +103,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<string, boolean> = {
   'Source of Hire': true,
   'PAN card number': true,
   'Aadhaar card number': true,
+  'Proposed Joining Date': true,
   'UAN number': true,
   'Present address': false,
   'Candidate ID': false,
@@ -507,7 +509,36 @@ export function OnboardingView() {
   const [filterLocation, setFilterLocation] = useState('All Locations');
   const [isSystemFiltersOpen, setIsSystemFiltersOpen] = useState(true);
   const [isFieldsListOpen, setIsFieldsListOpen] = useState(true);
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_COLUMNS);
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('cube_onboarding_visible_columns');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed['Proposed Joining Date'] !== undefined && parsed['Tentative Joining Date'] === undefined) {
+          parsed['Tentative Joining Date'] = parsed['Proposed Joining Date'];
+        }
+        if (parsed['Tentative Joining Date'] !== undefined && parsed['Proposed Joining Date'] === undefined) {
+          parsed['Proposed Joining Date'] = parsed['Tentative Joining Date'];
+        }
+        return { ...DEFAULT_VISIBLE_COLUMNS, ...parsed };
+      }
+    } catch (e) {
+      console.warn('Failed to load visible columns from localStorage', e);
+    }
+    return DEFAULT_VISIBLE_COLUMNS;
+  });
+
+  // Temporary working state for "Edit Candidate View Columns" modal
+  const [tempEditColumns, setTempEditColumns] = useState<Record<string, boolean>>(() => visibleColumns);
+
+  // Sync visible columns to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem('cube_onboarding_visible_columns', JSON.stringify(visibleColumns));
+    } catch (e) {
+      console.warn('Failed to save visible columns to localStorage', e);
+    }
+  }, [visibleColumns]);
 
   // Mass Update Modal State (reference: user upload with Field Name and Value)
   const [isMassUpdateModalOpen, setIsMassUpdateModalOpen] = useState(false);
@@ -800,6 +831,28 @@ export function OnboardingView() {
     else next.add(id);
     setSelectedIds(next);
   };
+
+  // Dynamic frozen column widths & left offsets for candidate data grid
+  const hasFirstName = visibleColumns['First name'] !== false;
+  const hasLastName = visibleColumns['Last name'] !== false;
+  const hasEmail = visibleColumns['Email ID'] !== false;
+
+  const firstNameLeft = 72;
+  const lastNameLeft = hasFirstName ? firstNameLeft + 144 : 72;
+  const emailLeft = 72 + (hasFirstName ? 144 : 0) + (hasLastName ? 144 : 0);
+
+  const isEmailBoundary = hasEmail;
+  const isLastNameBoundary = !hasEmail && hasLastName;
+  const isFirstNameBoundary = !hasEmail && !hasLastName && hasFirstName;
+  const isIndexBoundary = !hasEmail && !hasLastName && !hasFirstName;
+
+  const freezeBoundaryShadowHeader = isDark
+    ? 'border-r border-[#333] shadow-[4px_0_8px_-2px_rgba(0,0,0,0.5)]'
+    : 'border-r border-[#D9E2F2] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.08)]';
+
+  const freezeBoundaryShadowRow = isDark
+    ? 'border-r border-[#333] shadow-[4px_0_8px_-2px_rgba(0,0,0,0.5)]'
+    : 'border-r border-[#D9E2F2] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.08)]';
 
   const resetForm = () => {
     setFormFirstName(''); setFormLastName(''); setFormEmail('');
@@ -1420,7 +1473,15 @@ export function OnboardingView() {
 
             {/* Edit View Button */}
             <button
-              onClick={() => setIsEditViewOpen(true)}
+              onClick={() => {
+                const isJoiningDateVisible = visibleColumns['Proposed Joining Date'] !== false && visibleColumns['Tentative Joining Date'] !== false;
+                setTempEditColumns({
+                  ...visibleColumns,
+                  'Proposed Joining Date': isJoiningDateVisible,
+                  'Tentative Joining Date': isJoiningDateVisible,
+                });
+                setIsEditViewOpen(true);
+              }}
               className="text-xs font-semibold text-[#187F7A] hover:underline cursor-pointer"
             >
               Edit
@@ -1711,8 +1772,8 @@ export function OnboardingView() {
               }`}
               style={{ maxHeight: isFullView ? 'calc(100vh - 120px)' : 'calc(100vh - 290px)' }}
             >
-              {/* Total explicit width: 40+32+144+144+224+192+192+160+144+176+192+96 = 1744px */}
-              <div className="w-max min-w-[1744px]">
+              {/* Total explicit width: scrolls when columns exceed width */}
+              <div className="w-max min-w-full">
 
               {/* Header Row */}
               <div className={`border-b flex items-center text-xs font-semibold uppercase tracking-wider whitespace-nowrap select-none ${
@@ -1734,42 +1795,49 @@ export function OnboardingView() {
                 {/* 2. # Index - Frozen / Sticky left-[40px] */}
                 <div className={`px-2 py-3 w-8 shrink-0 text-gray-400 text-center sticky top-0 left-[40px] z-30 transition-colors ${
                   isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                }`}>#</div>
+                } ${isIndexBoundary ? freezeBoundaryShadowHeader : ''}`}>#</div>
 
-                {/* 3. First name - Frozen / Sticky left-[72px] */}
-                <div
-                  onClick={() => handleSort('first_name')}
-                  className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 left-[72px] z-30 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>First name</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
+                {/* 3. First name - Frozen / Sticky */}
+                {hasFirstName && (
+                  <div
+                    onClick={() => handleSort('first_name')}
+                    style={{ left: `${firstNameLeft}px` }}
+                    className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-30 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    } ${isFirstNameBoundary ? freezeBoundaryShadowHeader : ''}`}
+                  >
+                    <span>First name</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
 
-                {/* 4. Last name - Frozen / Sticky left-[216px] */}
-                <div
-                  onClick={() => handleSort('last_name')}
-                  className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 left-[216px] z-30 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Last name</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
+                {/* 4. Last name - Frozen / Sticky */}
+                {hasLastName && (
+                  <div
+                    onClick={() => handleSort('last_name')}
+                    style={{ left: `${lastNameLeft}px` }}
+                    className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-30 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    } ${isLastNameBoundary ? freezeBoundaryShadowHeader : ''}`}
+                  >
+                    <span>Last name</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
 
-                {/* 5. Email ID - Frozen / Sticky left-[360px] with divider & shadow to mark freeze boundary */}
-                <div
-                  onClick={() => handleSort('email')}
-                  className={`px-3 py-3 w-56 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 left-[360px] z-30 border-r transition-colors ${
-                    isDark
-                      ? 'bg-[#222] border-[#333] shadow-[4px_0_8px_-2px_rgba(0,0,0,0.5)]'
-                      : 'bg-[#F4F6FB] border-[#D9E2F2] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.08)]'
-                  }`}
-                >
-                  <span>Email ID</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
+                {/* 5. Email ID - Frozen / Sticky with divider & shadow to mark freeze boundary */}
+                {hasEmail && (
+                  <div
+                    onClick={() => handleSort('email')}
+                    style={{ left: `${emailLeft}px` }}
+                    className={`px-3 py-3 w-56 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-30 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    } ${isEmailBoundary ? freezeBoundaryShadowHeader : ''}`}
+                  >
+                    <span>Email ID</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
 
                 {/* Remaining columns scroll horizontally under / past the frozen columns */}
                 {visibleColumns['Official Email'] !== false && (
@@ -1903,9 +1971,9 @@ export function OnboardingView() {
                     <span>Offer Letter</span>
                   </div>
                 )}
-                {visibleColumns['Tentative Joining Date'] !== false && (
+                {(visibleColumns['Tentative Joining Date'] !== false && visibleColumns['Proposed Joining Date'] !== false) && (
                   <div className={`px-3 py-3 w-40 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
-                    <span>Tentative Joining</span>
+                    <span>Proposed Joining Date</span>
                   </div>
                 )}
                 {visibleColumns['Added By'] && (
@@ -1973,32 +2041,47 @@ export function OnboardingView() {
                       </div>
 
                       {/* 2. # Index - Frozen / Sticky left-[40px] */}
-                      <div className={`px-2 py-3 w-8 shrink-0 text-gray-400 text-center sticky left-[40px] z-10 transition-colors ${rowCellBg} ${rowHoverBg}`}>
+                      <div className={`px-2 py-3 w-8 shrink-0 text-gray-400 text-center sticky left-[40px] z-10 transition-colors ${rowCellBg} ${rowHoverBg} ${
+                        isIndexBoundary ? freezeBoundaryShadowRow : ''
+                      }`}>
                         {(currentPage - 1) * pageSize + idx + 1}
                       </div>
 
-                      {/* 3. First Name - Frozen / Sticky left-[72px] */}
-                      <div className={`px-3 py-3 w-36 shrink-0 font-semibold truncate group-hover:text-[#187F7A] transition sticky left-[72px] z-10 ${rowCellBg} ${rowHoverBg} ${
-                        isDark ? 'text-gray-100' : 'text-[#1B2D32]'
-                      }`}>
-                        {c.first_name}
-                      </div>
+                      {/* 3. First Name - Frozen / Sticky */}
+                      {hasFirstName && (
+                        <div
+                          style={{ left: `${firstNameLeft}px` }}
+                          className={`px-3 py-3 w-36 shrink-0 font-semibold truncate group-hover:text-[#187F7A] transition sticky z-10 ${rowCellBg} ${rowHoverBg} ${
+                            isDark ? 'text-gray-100' : 'text-[#1B2D32]'
+                          } ${isFirstNameBoundary ? freezeBoundaryShadowRow : ''}`}
+                        >
+                          {c.first_name}
+                        </div>
+                      )}
 
-                      {/* 4. Last Name - Frozen / Sticky left-[216px] */}
-                      <div className={`px-3 py-3 w-36 shrink-0 truncate sticky left-[216px] z-10 transition-colors ${rowCellBg} ${rowHoverBg} ${
-                        isDark ? 'text-gray-100' : 'text-[#1B2D32]'
-                      }`}>
-                        {c.last_name}
-                      </div>
+                      {/* 4. Last Name - Frozen / Sticky */}
+                      {hasLastName && (
+                        <div
+                          style={{ left: `${lastNameLeft}px` }}
+                          className={`px-3 py-3 w-36 shrink-0 truncate sticky z-10 transition-colors ${rowCellBg} ${rowHoverBg} ${
+                            isDark ? 'text-gray-100' : 'text-[#1B2D32]'
+                          } ${isLastNameBoundary ? freezeBoundaryShadowRow : ''}`}
+                        >
+                          {c.last_name}
+                        </div>
+                      )}
 
-                      {/* 5. Email ID - Frozen / Sticky left-[360px] with divider & shadow to mark freeze boundary */}
-                      <div className={`px-3 py-3 w-56 shrink-0 text-[#187F7A] hover:underline truncate sticky left-[360px] z-10 border-r transition-colors ${rowCellBg} ${rowHoverBg} ${
-                        isDark
-                          ? 'border-[#333] shadow-[4px_0_8px_-2px_rgba(0,0,0,0.5)]'
-                          : 'border-[#D9E2F2] shadow-[4px_0_6px_-2px_rgba(0,0,0,0.08)]'
-                      }`}>
-                        {c.email}
-                      </div>
+                      {/* 5. Email ID - Frozen / Sticky with divider & shadow to mark freeze boundary */}
+                      {hasEmail && (
+                        <div
+                          style={{ left: `${emailLeft}px` }}
+                          className={`px-3 py-3 w-56 shrink-0 text-[#187F7A] hover:underline truncate sticky z-10 transition-colors ${rowCellBg} ${rowHoverBg} ${
+                            isEmailBoundary ? freezeBoundaryShadowRow : ''
+                          }`}
+                        >
+                          {c.email}
+                        </div>
+                      )}
 
                       {/* 6+. Scrollable Columns that slide under / past frozen columns */}
                       {visibleColumns['Official Email'] !== false && (
@@ -2062,7 +2145,7 @@ export function OnboardingView() {
                       {visibleColumns['Offer Letter'] && (
                         <div className="px-3 py-3 w-36 shrink-0 text-[#187F7A] truncate">Generated PDF</div>
                       )}
-                      {visibleColumns['Tentative Joining Date'] !== false && (
+                      {(visibleColumns['Tentative Joining Date'] !== false && visibleColumns['Proposed Joining Date'] !== false) && (
                         <div className="px-3 py-3 w-40 shrink-0 text-gray-400 truncate">{c.proposed_joining_date || '2026-12-01'}</div>
                       )}
                       {visibleColumns['Added By'] && (
@@ -2872,14 +2955,30 @@ export function OnboardingView() {
                 'First name', 'Last name', 'Email ID', 'Official Email',
                 'Onboarding Status', 'Department', 'Source of Hire',
                 'PAN card number', 'Aadhaar card number', 'Proposed Joining Date'
-              ].map(col => (
-                <label key={col} className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition ${
-                  isDark ? 'bg-[#2a2a2a] hover:bg-[#333]' : 'bg-slate-50 hover:bg-slate-100'
-                }`}>
-                  <input type="checkbox" defaultChecked className="w-3.5 h-3.5 accent-[#187F7A]" />
-                  <span className={isDark ? 'text-gray-200' : 'text-[#1B2D32]'}>{col}</span>
-                </label>
-              ))}
+              ].map(col => {
+                const isChecked = tempEditColumns[col] !== false;
+                return (
+                  <label key={col} className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition select-none ${
+                    isDark ? 'bg-[#2a2a2a] hover:bg-[#333]' : 'bg-slate-50 hover:bg-slate-100'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        const nextVal = !isChecked;
+                        setTempEditColumns(prev => ({
+                          ...prev,
+                          [col]: nextVal,
+                          ...(col === 'Proposed Joining Date' ? { 'Tentative Joining Date': nextVal } : {}),
+                          ...(col === 'Tentative Joining Date' ? { 'Proposed Joining Date': nextVal } : {})
+                        }));
+                      }}
+                      className="w-3.5 h-3.5 accent-[#187F7A] cursor-pointer rounded"
+                    />
+                    <span className={isDark ? 'text-gray-200' : 'text-[#1B2D32]'}>{col}</span>
+                  </label>
+                );
+              })}
             </div>
             <div className={`flex justify-end gap-3 pt-4 border-t mt-4 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
               <button
@@ -2889,7 +2988,18 @@ export function OnboardingView() {
                 Cancel
               </button>
               <button
-                onClick={() => { setIsEditViewOpen(false); showToast('Candidate view customized successfully!'); }}
+                onClick={() => {
+                  setVisibleColumns(prev => {
+                    const updated = { ...prev, ...tempEditColumns };
+                    if (tempEditColumns['Proposed Joining Date'] !== undefined) {
+                      updated['Tentative Joining Date'] = tempEditColumns['Proposed Joining Date'];
+                      updated['Proposed Joining Date'] = tempEditColumns['Proposed Joining Date'];
+                    }
+                    return updated;
+                  });
+                  setIsEditViewOpen(false);
+                  showToast('Candidate view customized successfully!');
+                }}
                 className="bg-[#187F7A] hover:bg-[#146A66] text-white text-xs font-semibold px-4 py-2 rounded-lg cursor-pointer shadow-xs"
               >
                 Apply View

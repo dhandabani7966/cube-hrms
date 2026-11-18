@@ -142,4 +142,41 @@ test.describe('Onboarding Candidates Advanced Operations & Filters', () => {
     await expect(page.getByRole('heading', { name: 'Import Candidates' })).not.toBeVisible();
     await expect(page.getByText(/Successfully imported/i)).toBeVisible();
   });
+
+  test('TC-ONB-ADV-07: Edit Candidate View Columns modal unchecks Email ID, applies to table, and persists across reopen', async ({ page }) => {
+    // 1. Initial state: Email ID column header is visible in candidate table
+    await expect(page.locator('div').filter({ hasText: /^Email ID$/ }).first()).toBeVisible();
+
+    // 2. Click "Edit" next to Candidate View
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    const modalHeading = page.getByRole('heading', { name: 'Edit Candidate View Columns' });
+    await expect(modalHeading).toBeVisible();
+
+    // 3. Uncheck "Email ID" checkbox in the modal
+    const emailLabel = page.locator('label').filter({ hasText: /^Email ID$/ });
+    const emailCheckbox = emailLabel.locator('input[type="checkbox"]');
+    await expect(emailCheckbox).toBeChecked();
+    await emailCheckbox.uncheck();
+    await expect(emailCheckbox).not.toBeChecked();
+
+    // 4. Click "Apply View"
+    await page.getByRole('button', { name: 'Apply View' }).click();
+    await expect(modalHeading).not.toBeVisible();
+    await expect(page.getByText('Candidate view customized successfully!')).toBeVisible();
+
+    // 5. Verify "Email ID" column is now hidden from the table
+    await expect(page.locator('div').filter({ hasText: /^Email ID$/ })).not.toBeVisible();
+
+    // 6. Reopen Edit modal and verify "Email ID" remains unchecked (persisted!)
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await expect(modalHeading).toBeVisible();
+    const emailCheckboxReopened = page.locator('label').filter({ hasText: /^Email ID$/ }).locator('input[type="checkbox"]');
+    await expect(emailCheckboxReopened).not.toBeChecked();
+
+    // 7. Check it back on and apply
+    await emailCheckboxReopened.check();
+    await page.getByRole('button', { name: 'Apply View' }).click();
+    await expect(modalHeading).not.toBeVisible();
+    await expect(page.locator('div').filter({ hasText: /^Email ID$/ }).first()).toBeVisible();
+  });
 });
