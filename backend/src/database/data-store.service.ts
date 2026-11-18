@@ -348,7 +348,7 @@ export class DataStoreService {
     },
   ];
 
-  private candidates = [
+  private candidates: any[] = [
     {
       id: 'c-11111111-1111-1111-1111-111111111111',
       tenant_id: TENANT_A_ID,
@@ -360,7 +360,7 @@ export class DataStoreService {
       department_id: 'd-11111111-1111-1111-1111-111111111111',
       designation_id: 'des-11111111-1111-1111-1111-111111111111',
       invitation_token: 'tok-onb-1111-2222-3333',
-      status: 'VERIFICATION_PENDING',
+      status: 'READY_FOR_DAY_ONE',
       converted_employee_id: null,
       created_at: '2026-11-01T10:00:00.000Z',
     },
@@ -1103,6 +1103,103 @@ export class DataStoreService {
     candidate.converted_employee_id = newEmp.id;
 
     return { candidate, employee: newEmp };
+  }
+
+  massUpdateCandidates(tenantId: string, candidateIds: string[], updates: Record<string, any>) {
+    const updated: any[] = [];
+    for (const c of this.candidates) {
+      if (c.tenant_id === tenantId && candidateIds.includes(c.id)) {
+        Object.assign(c, updates);
+        c.updated_at = new Date().toISOString();
+        updated.push(c);
+      }
+    }
+    return { success: true, count: updated.length, candidates: updated };
+  }
+
+  bulkDeleteCandidates(tenantId: string, candidateIds: string[]) {
+    const initialCount = this.candidates.length;
+    this.candidates = this.candidates.filter(
+      (c) => !(c.tenant_id === tenantId && candidateIds.includes(c.id))
+    );
+    const deletedCount = initialCount - this.candidates.length;
+    return { success: true, count: deletedCount };
+  }
+
+  bulkConvertCandidates(tenantId: string, candidateIds: string[], payload?: any) {
+    const converted: any[] = [];
+    for (const id of candidateIds) {
+      try {
+        const result = this.convertCandidateToEmployee(tenantId, id, payload || {});
+        converted.push(result);
+      } catch {
+        // Skip candidate if conversion fails
+      }
+    }
+    return { success: true, count: converted.length, converted };
+  }
+
+  bulkInviteCandidates(tenantId: string, candidateIds: string[]) {
+    let count = 0;
+    for (const c of this.candidates) {
+      if (c.tenant_id === tenantId && candidateIds.includes(c.id)) {
+        c.status = 'INVITED';
+        c.invitation_token = `tok-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+        c.updated_at = new Date().toISOString();
+        count++;
+      }
+    }
+    return { success: true, count };
+  }
+
+  bulkImportCandidates(tenantId: string, candidatesList: any[]) {
+    const created: any[] = [];
+    for (const item of candidatesList) {
+      const id = item.id || `c-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const newCand = {
+        id,
+        tenant_id: tenantId,
+        ...item,
+        invitation_token: item.invitation_token || `tok-${Date.now()}`,
+        status: item.status || 'INVITED',
+        created_at: item.created_at || new Date().toISOString(),
+      };
+      this.candidates.push(newCand);
+      created.push(newCand);
+    }
+    return { success: true, count: created.length, candidates: created };
+  }
+
+  exportCandidates(tenantId: string) {
+    return this.getCandidates(tenantId).map((c) => {
+      const dept = this.departments.find((d) => d.id === c.department_id);
+      const desig = this.designations.find((d) => d.id === c.designation_id);
+      return {
+        ...c,
+        department_name: dept?.name || c.department || '',
+        designation_title: desig?.title || c.designation || '',
+      };
+    });
+  }
+
+  getCandidatesAuditHistory(tenantId: string) {
+    return this.getCandidates(tenantId).map((c) => ({
+      candidate_id: c.id,
+      candidate_name: `${c.first_name} ${c.last_name}`,
+      email: c.email,
+      status: c.status,
+      timestamp: c.created_at,
+      action: 'CANDIDATE_LIFECYCLE_EVENT',
+      performed_by: 'HR Admin',
+    }));
+  }
+
+  getAccessLogs(tenantId: string) {
+    return [
+      { id: `log-${Date.now()}-1`, timestamp: new Date().toISOString(), user: 'admin@cubeai.internal', role: 'SUPER_ADMIN', action: 'VIEW_CANDIDATE_PIPELINE', ip: '192.168.1.101', status: 'SUCCESS' },
+      { id: `log-${Date.now()}-2`, timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'hr.admin@cubeai.internal', role: 'HR_ADMIN', action: 'VERIFY_DOCUMENTS', ip: '192.168.1.105', status: 'SUCCESS' },
+      { id: `log-${Date.now()}-3`, timestamp: new Date(Date.now() - 7200000).toISOString(), user: 'hiring.manager@cubeai.internal', role: 'HIRING_MANAGER', action: 'EXPORT_CANDIDATE_ROSTER', ip: '192.168.1.109', status: 'SUCCESS' },
+    ];
   }
 
   // Help Desk / Cases

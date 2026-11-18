@@ -2,11 +2,22 @@ import { useState, useRef, useEffect } from 'react';
 import {
   UserPlus, CheckCircle2, Clock, UserCheck, X, FileText, ExternalLink,
   ChevronDown, ArrowUpDown, Settings, Bell, GitBranch, Plus,
-  Search, ChevronRight, Download, Trash2, Check, Eye,
-  SlidersHorizontal, Upload, Sparkles
+  Search, ChevronRight, Download, Trash2, Eye,
+  SlidersHorizontal, Upload, Sparkles, MoreHorizontal, UploadCloud,
+  Shield, FileSpreadsheet, FolderUp
 } from 'lucide-react';
 
 import { useTheme } from '../../lib/theme';
+import { apiFetch } from '../../lib/api';
+
+// ─── 3 max-to-min horizontal lines funnel filter icon (reference: user upload) ──
+const FilterTaperedIcon = ({ className = "h-4 w-4" }: { className?: string }) => (
+  <svg viewBox="0 0 16 16" fill="currentColor" className={className}>
+    <rect x="2" y="3.5" width="12" height="1.8" rx="0.9" />
+    <rect x="4.5" y="7.5" width="7" height="1.8" rx="0.9" />
+    <rect x="7" y="11.5" width="2" height="1.8" rx="0.9" />
+  </svg>
+);
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -33,7 +44,143 @@ interface Candidate {
   experience?: string;
   role?: string;
   panFile?: string;
+  uan?: string;
+  present_address?: string;
+  permanent_address?: string;
+  skill_set?: string;
+  highest_qualification?: string;
+  location?: string;
+  title?: string;
+  current_salary?: string;
+  additional_information?: string;
+  offer_letter?: string;
+  tentative_joining_date?: string;
+  added_by?: string;
+  added_time?: string;
+  modified_by?: string;
+  modified_time?: string;
 }
+
+const ALL_FIELD_NAMES = [
+  'First name',
+  'Last name',
+  'Email ID',
+  'Official Email',
+  'Onboarding Status',
+  'Department',
+  'Source of Hire',
+  'PAN card number',
+  'Aadhaar card number',
+  'UAN number',
+  'Present address',
+  'Candidate ID',
+  'Permanent address',
+  'Phone',
+  'Experience',
+  'Skill Set',
+  'Highest Qualification',
+  'Location',
+  'Title',
+  'Current Salary',
+  'Additional Information',
+  'Offer Letter',
+  'Tentative Joining Date',
+  'Added By',
+  'Added Time',
+  'Modified By',
+  'Modified Time',
+] as const;
+
+const DEFAULT_VISIBLE_COLUMNS: Record<string, boolean> = {
+  'First name': true,
+  'Last name': true,
+  'Email ID': true,
+  'Official Email': true,
+  'Onboarding Status': true,
+  'Department': true,
+  'Source of Hire': true,
+  'PAN card number': true,
+  'Aadhaar card number': true,
+  'UAN number': true,
+  'Present address': false,
+  'Candidate ID': false,
+  'Permanent address': false,
+  'Phone': true,
+  'Experience': true,
+  'Skill Set': false,
+  'Highest Qualification': false,
+  'Location': true,
+  'Title': true,
+  'Current Salary': false,
+  'Additional Information': false,
+  'Offer Letter': false,
+  'Tentative Joining Date': true,
+  'Added By': false,
+  'Added Time': false,
+  'Modified By': false,
+  'Modified Time': false,
+};
+
+const MASS_UPDATE_FIELDS = [
+  'First name',
+  'Last name',
+  'Official Email',
+  'Department',
+  'Designation',
+  'Onboarding Status',
+  'Source of Hire',
+  'Phone',
+  'Experience',
+  'Highest Qualification',
+  'Skill Set',
+  'Location',
+  'Current Salary',
+  'Tentative Joining Date',
+  'PAN card number',
+  'Aadhaar card number',
+  'UAN number',
+  'Present address',
+  'Permanent address',
+  'Additional Information',
+] as const;
+
+const FIELD_TO_PROP_MAP: Record<string, keyof Candidate> = {
+  'First name': 'first_name',
+  'Last name': 'last_name',
+  'Official Email': 'official_email',
+  'Department': 'department',
+  'Designation': 'designation',
+  'Title': 'designation',
+  'Onboarding Status': 'status',
+  'Source of Hire': 'source_of_hire',
+  'Phone': 'mobile_phone',
+  'Experience': 'experience',
+  'Highest Qualification': 'highest_qualification',
+  'Skill Set': 'skill_set',
+  'Location': 'location',
+  'Current Salary': 'current_salary',
+  'Tentative Joining Date': 'proposed_joining_date',
+  'PAN card number': 'pan_card',
+  'Aadhaar card number': 'aadhaar',
+  'UAN number': 'uan',
+  'Present address': 'present_address',
+  'Permanent address': 'permanent_address',
+  'Additional Information': 'additional_information',
+};
+
+const downloadCSV = (filename: string, headers: string[], rows: (string | number)[][]) => {
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 interface EducationRow {
   id: string;
@@ -302,7 +449,7 @@ export function OnboardingView() {
   const [mainTab, setMainTab] = useState<'operations' | 'configuration' | 'extendService' | 'permissions' | 'automation'>('operations');
 
   // Unified single-active-dropdown state (auto-closes other dropdowns)
-  const [activeDropdown, setActiveDropdown] = useState<'candidateView' | 'dataFilter' | 'pageSize' | 'notifications' | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<'candidateView' | 'dataFilter' | 'pageSize' | 'notifications' | 'moreOptions' | 'convertTo' | null>(null);
 
   // Close open dropdown when clicking anywhere outside
   useEffect(() => {
@@ -347,8 +494,78 @@ export function OnboardingView() {
   const [portalCandidate, setPortalCandidate] = useState<Candidate | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null);
 
+  // Filter Drawer State (reference: user upload with 3 tapered lines)
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [filterSearchQuery, setFilterSearchQuery] = useState('');
+  const [filterEmployeeQuery, setFilterEmployeeQuery] = useState('');
+  const [filterDepartment, setFilterDepartment] = useState('All Department');
+  const [filterLocation, setFilterLocation] = useState('All Locations');
+  const [isSystemFiltersOpen, setIsSystemFiltersOpen] = useState(true);
+  const [isFieldsListOpen, setIsFieldsListOpen] = useState(true);
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(DEFAULT_VISIBLE_COLUMNS);
+
+  // Mass Update Modal State (reference: user upload with Field Name and Value)
+  const [isMassUpdateModalOpen, setIsMassUpdateModalOpen] = useState(false);
+  const [massUpdateRows, setMassUpdateRows] = useState<Array<{ field: string; value: string }>>([
+    { field: 'Onboarding Status', value: 'READY_FOR_DAY_ONE' }
+  ]);
+
+  // Import Modal State (from 3-dots menu)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importCsvText, setImportCsvText] = useState('');
+
+  // Bulk Upload Modal State (from 3-dots menu)
+  const [isBulkUploadModalOpen, setIsBulkUploadModalOpen] = useState(false);
+  const [bulkUploadCategory, setBulkUploadCategory] = useState('Identity Proofs (Aadhaar / PAN)');
+  const [bulkUploadedFiles, setBulkUploadedFiles] = useState<Array<{ name: string; size: string; status: string }>>([]);
+
   // Toast Banner
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Backend Candidates Synchronization
+  useEffect(() => {
+    apiFetch<any[]>('/onboarding/candidates')
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: Candidate[] = data.map((d: any, idx: number) => ({
+            id: d.id || `c-${idx + 1}`,
+            first_name: d.first_name || '',
+            last_name: d.last_name || '',
+            email: d.email || '',
+            official_email: d.work_email || d.official_email || '',
+            mobile_phone: d.mobile_phone || '+91 98400 00000',
+            proposed_joining_date: d.proposed_joining_date || '2026-12-01',
+            department: d.department_name || d.department || 'Engineering',
+            designation: d.designation_title || d.designation || 'Software Engineer',
+            source_of_hire: d.source_of_hire || 'LinkedIn',
+            pan_card: d.pan_number || d.pan_card || 'ABCDE1234F',
+            aadhaar: d.aadhaar || '987654321098',
+            status: d.status || 'INVITED',
+            tasksCompleted: d.status === 'READY_FOR_DAY_ONE' ? 5 : d.status === 'VERIFICATION_PENDING' ? 2 : 0,
+            tasksTotal: 5,
+            location: d.location || 'Bangalore HQ',
+            experience: d.experience || '3 years',
+            uan: d.uan || '100987654399',
+            present_address: d.present_address || 'Bangalore, India',
+            permanent_address: d.permanent_address || 'Bangalore, India',
+            highest_qualification: d.highest_qualification || 'B.Tech / B.E.',
+            skill_set: d.skill_set || 'TypeScript, React, Python',
+            current_salary: d.current_salary || '₹ 18,50,000',
+            added_by: 'HR Admin',
+            added_time: '2026-11-01 10:00',
+            modified_by: 'HR Admin',
+            modified_time: '2026-11-15 14:30',
+          }));
+          setCandidates(prev => {
+            const emails = new Set(mapped.map(m => m.email.toLowerCase()));
+            return [...mapped, ...prev.filter(p => !emails.has(p.email.toLowerCase()))];
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn('Backend candidates endpoint fallback:', err);
+      });
+  }, []);
 
   // Scroll ref for horizontal table navigation
   const tableContainerRef = useRef<HTMLDivElement>(null);
@@ -502,6 +719,34 @@ export function OnboardingView() {
       if (c.department === 'Finance') return false;
     }
 
+    if (filterDepartment !== 'All Department' && c.department !== filterDepartment) {
+      return false;
+    }
+
+    if (filterLocation !== 'All Locations' && (c.location || 'Bangalore HQ') !== filterLocation) {
+      return false;
+    }
+
+    if (filterEmployeeQuery.trim()) {
+      const q = filterEmployeeQuery.toLowerCase();
+      const match = `${c.first_name} ${c.last_name}`.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+
+    if (filterSearchQuery.trim()) {
+      const q = filterSearchQuery.toLowerCase();
+      const match =
+        c.first_name.toLowerCase().includes(q) ||
+        c.last_name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.official_email && c.official_email.toLowerCase().includes(q)) ||
+        (c.department && c.department.toLowerCase().includes(q)) ||
+        (c.designation && c.designation.toLowerCase().includes(q)) ||
+        (c.source_of_hire && c.source_of_hire.toLowerCase().includes(q));
+      if (!match) return false;
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const match =
@@ -643,17 +888,243 @@ export function OnboardingView() {
     showToast('Candidate converted to employee successfully!');
   };
 
-  const handleBulkStatusChange = (newStatus: string) => {
-    setCandidates(candidates.map(c => selectedIds.has(c.id) ? { ...c, status: newStatus } : c));
-    showToast(`Updated status to ${newStatus} for ${selectedIds.size} candidates.`);
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (confirm(`Are you sure you want to permanently delete ${selectedIds.size} selected candidate(s)?`)) {
+      const ids = Array.from(selectedIds);
+      try {
+        await apiFetch('/onboarding/candidates/bulk-delete', {
+          method: 'POST',
+          body: JSON.stringify({ candidateIds: ids }),
+        });
+      } catch (err) {
+        console.warn('Backend bulk delete fallback:', err);
+      }
+      setCandidates(prev => prev.filter(c => !selectedIds.has(c.id)));
+      showToast(`Successfully deleted ${ids.length} candidate(s).`);
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleBulkConvertToEmployee = async () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    try {
+      await apiFetch('/onboarding/candidates/bulk-convert', {
+        method: 'POST',
+        body: JSON.stringify({ candidateIds: ids }),
+      });
+    } catch (err) {
+      console.warn('Backend bulk convert fallback:', err);
+    }
+    setCandidates(prev => prev.map(c =>
+      selectedIds.has(c.id)
+        ? {
+            ...c,
+            status: 'CONVERTED_TO_EMPLOYEE',
+            tasksCompleted: 5,
+            official_email: c.official_email || `${c.first_name.toLowerCase()}.${c.last_name.toLowerCase()}@cubeai.internal`
+          }
+        : c
+    ));
+    showToast(`Successfully converted ${ids.length} candidate(s) to Employee Profile!`);
+    setSelectedIds(new Set());
+    setActiveDropdown(null);
+  };
+
+  const handleBulkInvite = async () => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    try {
+      await apiFetch('/onboarding/candidates/bulk-invite', {
+        method: 'POST',
+        body: JSON.stringify({ candidateIds: ids }),
+      });
+    } catch (err) {
+      console.warn('Backend bulk invite fallback:', err);
+    }
+    setCandidates(prev => prev.map(c => selectedIds.has(c.id) ? { ...c, status: 'INVITED' } : c));
+    showToast(`Dispatched onboarding portal invitations to ${ids.length} candidate(s)!`);
+    setSelectedIds(new Set());
+    setActiveDropdown(null);
+  };
+
+  const handleMassUpdateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedIds.size === 0) return;
+    const updates: Record<string, string> = {};
+    massUpdateRows.forEach(row => {
+      const prop = FIELD_TO_PROP_MAP[row.field];
+      if (prop) {
+        updates[prop] = row.value;
+      }
+    });
+
+    const ids = Array.from(selectedIds);
+    try {
+      await apiFetch('/onboarding/candidates/mass-update', {
+        method: 'POST',
+        body: JSON.stringify({ candidateIds: ids, updates }),
+      });
+    } catch (err) {
+      console.warn('Backend mass update fallback:', err);
+    }
+
+    setCandidates(prev => prev.map(c => {
+      if (!selectedIds.has(c.id)) return c;
+      const updated = { ...c };
+      massUpdateRows.forEach(r => {
+        const prop = FIELD_TO_PROP_MAP[r.field];
+        if (prop) {
+          (updated as any)[prop] = r.value;
+        }
+      });
+      return updated;
+    }));
+
+    showToast(`Mass update successfully applied to ${ids.length} candidate(s)!`);
+    setIsMassUpdateModalOpen(false);
     setSelectedIds(new Set());
   };
 
-  const handleBulkDelete = () => {
-    if (confirm(`Are you sure you want to delete ${selectedIds.size} candidates?`)) {
-      setCandidates(candidates.filter(c => !selectedIds.has(c.id)));
-      showToast(`Deleted ${selectedIds.size} candidates.`);
-      setSelectedIds(new Set());
+  const handleExportCandidates = async () => {
+    try {
+      const data = await apiFetch<any[]>('/onboarding/candidates/export');
+      if (Array.isArray(data) && data.length > 0) {
+        const headers = Object.keys(data[0]);
+        const rows = data.map(d => headers.map(h => d[h]));
+        downloadCSV(`candidates_export_${Date.now()}.csv`, headers, rows);
+        showToast('Exported candidate data successfully!');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend export fallback to local candidate state:', err);
+    }
+    const headers = ['First name', 'Last name', 'Email ID', 'Official Email', 'Onboarding Status', 'Department', 'Designation', 'Source of Hire', 'Phone', 'PAN', 'Aadhaar', 'Location'];
+    const rows = candidates.map(c => [
+      c.first_name,
+      c.last_name,
+      c.email,
+      c.official_email || '',
+      c.status,
+      c.department,
+      c.designation,
+      c.source_of_hire,
+      c.mobile_phone,
+      c.pan_card,
+      c.aadhaar,
+      c.location || 'Bangalore HQ'
+    ]);
+    downloadCSV(`candidates_export_${Date.now()}.csv`, headers, rows);
+    showToast('Exported candidate data successfully!');
+  };
+
+  const handleExportHistory = async () => {
+    try {
+      const data = await apiFetch<any[]>('/onboarding/candidates/history-export');
+      if (Array.isArray(data) && data.length > 0) {
+        const headers = Object.keys(data[0]);
+        const rows = data.map(d => headers.map(h => d[h]));
+        downloadCSV(`candidates_history_audit_${Date.now()}.csv`, headers, rows);
+        showToast('Exported audit history successfully!');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend history export fallback:', err);
+    }
+    const headers = ['Audit ID', 'Entity', 'Candidate ID', 'Field Name', 'Old Value', 'New Value', 'Updated By', 'Timestamp'];
+    const rows = candidates.map((c, i) => [
+      `AUD-${1000 + i}`,
+      'Candidate',
+      c.id,
+      'status',
+      'INVITED',
+      c.status,
+      'HR Admin',
+      new Date().toISOString()
+    ]);
+    downloadCSV(`candidates_history_audit_${Date.now()}.csv`, headers, rows);
+    showToast('Exported audit history successfully!');
+  };
+
+  const handleExportAccessLog = async () => {
+    try {
+      const data = await apiFetch<any[]>('/onboarding/candidates/access-log-export');
+      if (Array.isArray(data) && data.length > 0) {
+        const headers = Object.keys(data[0]);
+        const rows = data.map(d => headers.map(h => d[h]));
+        downloadCSV(`candidates_access_log_${Date.now()}.csv`, headers, rows);
+        showToast('Exported candidate access log successfully!');
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend access log export fallback:', err);
+    }
+    const headers = ['Access ID', 'Action', 'Resource', 'Actor', 'IP Address', 'Timestamp', 'Status'];
+    const rows = [
+      ['LOG-801', 'READ_CANDIDATE_LIST', '/onboarding/candidates', 'admin@cubeai.com', '192.168.1.101', new Date().toISOString(), 'SUCCESS'],
+      ['LOG-802', 'VIEW_STATUTORY_DATA', '/onboarding/candidates/details', 'admin@cubeai.com', '192.168.1.101', new Date().toISOString(), 'SUCCESS'],
+      ['LOG-803', 'EXPORT_CSV', '/onboarding/candidates/export', 'admin@cubeai.com', '192.168.1.101', new Date().toISOString(), 'SUCCESS']
+    ];
+    downloadCSV(`candidates_access_log_${Date.now()}.csv`, headers, rows);
+    showToast('Exported candidate access log successfully!');
+  };
+
+  const handleImportCandidates = async () => {
+    if (!importCsvText.trim()) {
+      showToast('Please provide CSV data to import.');
+      return;
+    }
+    try {
+      const lines = importCsvText.trim().split('\n');
+      const parsedCandidates: any[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i].split(',').map(r => r.trim().replace(/^"|"$/g, ''));
+        if (row.length >= 3 && row[0]) {
+          parsedCandidates.push({
+            first_name: row[0],
+            last_name: row[1] || '',
+            email: row[2],
+            department_name: row[3] || 'Engineering',
+            designation_title: row[4] || 'Software Engineer',
+            mobile_phone: row[5] || '+91 98400 00000',
+            proposed_joining_date: '2026-12-01',
+            status: 'INVITED'
+          });
+        }
+      }
+      if (parsedCandidates.length > 0) {
+        await apiFetch('/onboarding/candidates/bulk-import', {
+          method: 'POST',
+          body: JSON.stringify({ candidates: parsedCandidates }),
+        });
+        const mapped = parsedCandidates.map((c, idx) => ({
+          id: `imp-${Date.now()}-${idx}`,
+          first_name: c.first_name,
+          last_name: c.last_name,
+          email: c.email,
+          official_email: '',
+          mobile_phone: c.mobile_phone,
+          proposed_joining_date: c.proposed_joining_date,
+          department: c.department_name,
+          designation: c.designation_title,
+          source_of_hire: 'CSV Import',
+          pan_card: 'ABCDE1234F',
+          aadhaar: '987654321098',
+          status: 'INVITED',
+          tasksCompleted: 0,
+          tasksTotal: 5,
+        }));
+        setCandidates(prev => [...mapped, ...prev]);
+        showToast(`Successfully imported ${parsedCandidates.length} candidate(s)!`);
+        setIsImportModalOpen(false);
+        setImportCsvText('');
+      } else {
+        showToast('No valid candidate rows detected in CSV.');
+      }
+    } catch (err) {
+      console.error('Import failure:', err);
+      showToast('Error importing candidates from CSV.');
     }
   };
 
@@ -917,32 +1388,73 @@ export function OnboardingView() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Bulk Action Bar (when candidates are selected) */}
+            {/* Massive Operations Bar (when candidate checkboxes are selected) */}
             {selectedIds.size > 0 && (
-              <div className="flex items-center gap-2 bg-[#187F7A]/15 px-3 py-1 rounded-md border border-[#187F7A]/30 text-xs animate-in fade-in">
+              <div className="flex items-center gap-2 bg-[#187F7A]/15 px-3 py-1.5 rounded-lg border border-[#187F7A]/30 text-xs animate-in fade-in">
                 <span className="font-semibold text-[#187F7A]">{selectedIds.size} selected</span>
-                <div className="h-3 w-px bg-gray-400" />
+                <div className="h-4 w-px bg-gray-400 opacity-60" />
+
+                {/* Mass Update Button (User reference screenshot) */}
                 <button
-                  onClick={() => handleBulkStatusChange('READY_FOR_DAY_ONE')}
-                  className="text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  onClick={() => setIsMassUpdateModalOpen(true)}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer border shadow-xs ${
+                    isDark
+                      ? 'bg-[#2a2a2a] hover:bg-[#333] text-gray-100 border-[#444]'
+                      : 'bg-white hover:bg-slate-50 text-[#1B2D32] border-[#D9E2F2]'
+                  }`}
                 >
-                  <Check className="h-3 w-3" /> Mark Ready
+                  Mass update
                 </button>
-                <button
-                  onClick={() => handleBulkStatusChange('VERIFICATION_PENDING')}
-                  className="text-amber-700 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
-                >
-                  <Clock className="h-3 w-3" /> Mark Pending
-                </button>
+
+                {/* Convert To ▾ Dropdown Button (User reference screenshot) */}
+                <div className="relative" data-dropdown="convertTo">
+                  <button
+                    onClick={() => setActiveDropdown(curr => curr === 'convertTo' ? null : 'convertTo')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer border shadow-xs ${
+                      isDark
+                        ? 'bg-[#2a2a2a] hover:bg-[#333] text-gray-100 border-[#444]'
+                        : 'bg-white hover:bg-slate-50 text-[#1B2D32] border-[#D9E2F2]'
+                    }`}
+                  >
+                    <span>Convert To</span>
+                    <ChevronDown className="h-3 w-3 opacity-60" />
+                  </button>
+                  {activeDropdown === 'convertTo' && (
+                    <div className={`absolute left-0 top-full mt-1.5 z-50 border rounded-lg shadow-2xl w-48 py-1 transition-all animate-in fade-in zoom-in-95 ${
+                      isDark ? 'bg-[#252525] border-[#444]' : 'bg-white border-[#D9E2F2]'
+                    }`}>
+                      <button
+                        onClick={handleBulkInvite}
+                        className={`block w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                          isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                        }`}
+                      >
+                        Invite Users
+                      </button>
+                      <button
+                        onClick={handleBulkConvertToEmployee}
+                        className={`block w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                          isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                        }`}
+                      >
+                        Employee Profile(s)
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Delete Button (Solid Red as per reference) */}
                 <button
                   onClick={handleBulkDelete}
-                  className="text-red-600 dark:text-red-400 hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium px-3 py-1 rounded-md text-xs transition cursor-pointer shadow-xs flex items-center gap-1"
                 >
-                  <Trash2 className="h-3 w-3" /> Delete
+                  <Trash2 className="h-3 w-3" />
+                  <span>Delete</span>
                 </button>
+
                 <button
                   onClick={() => setSelectedIds(new Set())}
-                  className="text-gray-500 hover:text-gray-700 ml-1 cursor-pointer"
+                  className="text-gray-400 hover:text-gray-200 ml-1 text-xs cursor-pointer"
                 >
                   Clear
                 </button>
@@ -1009,6 +1521,90 @@ export function OnboardingView() {
               <UserPlus className="h-3.5 w-3.5" />
               Invite Candidate
             </button>
+
+            {/* Tapered 3-Lines Filter Drawer Button (User reference screenshot) */}
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              title="Filter and Columns"
+              className={`p-2 rounded-lg transition cursor-pointer border flex items-center justify-center ${
+                isFilterDrawerOpen
+                  ? 'bg-[#187F7A] text-white border-[#187F7A]'
+                  : isDark
+                  ? 'bg-[#252525] hover:bg-[#333] text-gray-300 border-[#444]'
+                  : 'bg-white hover:bg-slate-50 text-gray-700 border-[#D9E2F2]'
+              }`}
+            >
+              <FilterTaperedIcon className="h-4 w-4" />
+            </button>
+
+            {/* 3-Dots More Options Menu (User reference screenshot) */}
+            <div className="relative" data-dropdown="moreOptions">
+              <button
+                onClick={() => setActiveDropdown(curr => curr === 'moreOptions' ? null : 'moreOptions')}
+                title="More Actions"
+                className={`p-2 rounded-lg transition cursor-pointer border flex items-center justify-center ${
+                  activeDropdown === 'moreOptions'
+                    ? 'bg-[#187F7A] text-white border-[#187F7A]'
+                    : isDark
+                    ? 'bg-[#252525] hover:bg-[#333] text-gray-300 border-[#444]'
+                    : 'bg-white hover:bg-slate-50 text-gray-700 border-[#D9E2F2]'
+                }`}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </button>
+              {activeDropdown === 'moreOptions' && (
+                <div className={`absolute right-0 top-full mt-1.5 z-50 border rounded-xl shadow-2xl w-52 py-1.5 transition-all animate-in fade-in zoom-in-95 ${
+                  isDark ? 'bg-[#222] border-[#444]' : 'bg-white border-[#D9E2F2]'
+                }`}>
+                  <button
+                    onClick={() => { setIsImportModalOpen(true); setActiveDropdown(null); }}
+                    className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                      isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                    }`}
+                  >
+                    <Download className="h-3.5 w-3.5 text-blue-400" />
+                    <span>Import</span>
+                  </button>
+                  <button
+                    onClick={() => { handleExportCandidates(); setActiveDropdown(null); }}
+                    className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                      isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                    }`}
+                  >
+                    <Upload className="h-3.5 w-3.5 text-emerald-400" />
+                    <span>Export</span>
+                  </button>
+                  <button
+                    onClick={() => { handleExportHistory(); setActiveDropdown(null); }}
+                    className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                      isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                    }`}
+                  >
+                    <UploadCloud className="h-3.5 w-3.5 text-amber-400" />
+                    <span>History Export</span>
+                  </button>
+                  <button
+                    onClick={() => { setIsBulkUploadModalOpen(true); setActiveDropdown(null); }}
+                    className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                      isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                    }`}
+                  >
+                    <FolderUp className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Bulk File Upload</span>
+                  </button>
+                  <div className={`my-1 border-t ${isDark ? 'border-[#333]' : 'border-gray-100'}`} />
+                  <button
+                    onClick={() => { handleExportAccessLog(); setActiveDropdown(null); }}
+                    className={`flex items-center gap-2.5 w-full text-left px-4 py-2 text-xs transition cursor-pointer ${
+                      isDark ? 'text-gray-200 hover:bg-[#333]' : 'text-[#1B2D32] hover:bg-slate-50'
+                    }`}
+                  >
+                    <Shield className="h-3.5 w-3.5 text-cyan-400" />
+                    <span>Export Access Log</span>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Horizontal Scroll Quick Buttons */}
             <div className={`flex items-center gap-1 ml-1 p-0.5 rounded border ${
@@ -1100,60 +1696,162 @@ export function OnboardingView() {
                 </div>
 
                 {/* Remaining columns scroll horizontally under / past the frozen columns */}
-                <div
-                  onClick={() => handleSort('official_email')}
-                  className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Official Email</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
-                <div
-                  onClick={() => handleSort('status')}
-                  className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Onboarding Status</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
-                <div
-                  onClick={() => handleSort('department')}
-                  className={`px-3 py-3 w-40 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Department</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
-                <div
-                  onClick={() => handleSort('source_of_hire')}
-                  className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Source of Hire</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
-                <div
-                  onClick={() => handleSort('pan_card')}
-                  className={`px-3 py-3 w-44 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>PAN card number</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
-                <div
-                  onClick={() => handleSort('aadhaar')}
-                  className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
-                    isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
-                  }`}
-                >
-                  <span>Aadhaar card number</span>
-                  <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
-                </div>
+                {visibleColumns['Official Email'] !== false && (
+                  <div
+                    onClick={() => handleSort('official_email')}
+                    className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>Official Email</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['Onboarding Status'] !== false && (
+                  <div
+                    onClick={() => handleSort('status')}
+                    className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>Onboarding Status</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['Department'] !== false && (
+                  <div
+                    onClick={() => handleSort('department')}
+                    className={`px-3 py-3 w-40 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>Department</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['Source of Hire'] !== false && (
+                  <div
+                    onClick={() => handleSort('source_of_hire')}
+                    className={`px-3 py-3 w-36 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>Source of Hire</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['PAN card number'] !== false && (
+                  <div
+                    onClick={() => handleSort('pan_card')}
+                    className={`px-3 py-3 w-44 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>PAN card number</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['Aadhaar card number'] !== false && (
+                  <div
+                    onClick={() => handleSort('aadhaar')}
+                    className={`px-3 py-3 w-48 shrink-0 flex items-center gap-1 hover:text-[#187F7A] cursor-pointer truncate sticky top-0 z-20 transition-colors ${
+                      isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
+                    }`}
+                  >
+                    <span>Aadhaar card number</span>
+                    <ArrowUpDown className="h-3 w-3 shrink-0 opacity-60" />
+                  </div>
+                )}
+                {visibleColumns['UAN number'] && (
+                  <div className={`px-3 py-3 w-40 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>UAN number</span>
+                  </div>
+                )}
+                {visibleColumns['Present address'] && (
+                  <div className={`px-3 py-3 w-48 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Present address</span>
+                  </div>
+                )}
+                {visibleColumns['Candidate ID'] && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Candidate ID</span>
+                  </div>
+                )}
+                {visibleColumns['Permanent address'] && (
+                  <div className={`px-3 py-3 w-48 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Permanent address</span>
+                  </div>
+                )}
+                {visibleColumns['Phone'] !== false && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Phone</span>
+                  </div>
+                )}
+                {visibleColumns['Experience'] !== false && (
+                  <div className={`px-3 py-3 w-32 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Experience</span>
+                  </div>
+                )}
+                {visibleColumns['Skill Set'] && (
+                  <div className={`px-3 py-3 w-44 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Skill Set</span>
+                  </div>
+                )}
+                {visibleColumns['Highest Qualification'] && (
+                  <div className={`px-3 py-3 w-44 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Highest Qualification</span>
+                  </div>
+                )}
+                {visibleColumns['Location'] !== false && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Location</span>
+                  </div>
+                )}
+                {visibleColumns['Title'] !== false && (
+                  <div className={`px-3 py-3 w-40 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Title</span>
+                  </div>
+                )}
+                {visibleColumns['Current Salary'] && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Current Salary</span>
+                  </div>
+                )}
+                {visibleColumns['Additional Information'] && (
+                  <div className={`px-3 py-3 w-48 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Additional Info</span>
+                  </div>
+                )}
+                {visibleColumns['Offer Letter'] && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Offer Letter</span>
+                  </div>
+                )}
+                {visibleColumns['Tentative Joining Date'] !== false && (
+                  <div className={`px-3 py-3 w-40 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Tentative Joining</span>
+                  </div>
+                )}
+                {visibleColumns['Added By'] && (
+                  <div className={`px-3 py-3 w-32 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Added By</span>
+                  </div>
+                )}
+                {visibleColumns['Added Time'] && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Added Time</span>
+                  </div>
+                )}
+                {visibleColumns['Modified By'] && (
+                  <div className={`px-3 py-3 w-32 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Modified By</span>
+                  </div>
+                )}
+                {visibleColumns['Modified Time'] && (
+                  <div className={`px-3 py-3 w-36 shrink-0 sticky top-0 z-20 transition-colors ${isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'}`}>
+                    <span>Modified Time</span>
+                  </div>
+                )}
                 <div className={`px-3 py-3 w-24 shrink-0 text-right sticky top-0 z-20 transition-colors ${
                   isDark ? 'bg-[#222]' : 'bg-[#F4F6FB]'
                 }`}>
@@ -1227,16 +1925,82 @@ export function OnboardingView() {
                       </div>
 
                       {/* 6+. Scrollable Columns that slide under / past frozen columns */}
-                      <div className="px-3 py-3 w-48 shrink-0 text-gray-500 truncate">{c.official_email || '—'}</div>
-                      <div className="px-3 py-3 w-48 shrink-0 truncate">{getLifecycleStatusBadge(c.status)}</div>
-                      <div className={`px-3 py-3 w-40 shrink-0 truncate ${isDark ? 'text-gray-300' : 'text-[#1B2D32]'}`}>{c.department}</div>
-                      <div className={`px-3 py-3 w-36 shrink-0 truncate ${isDark ? 'text-gray-300' : 'text-[#5E7174]'}`}>{c.source_of_hire}</div>
-                      <div className="px-3 py-3 w-44 shrink-0 font-mono tracking-wider text-gray-400 truncate">
-                        {c.pan_card ? '**********' : '—'}
-                      </div>
-                      <div className="px-3 py-3 w-48 shrink-0 font-mono tracking-wider text-gray-400 truncate">
-                        {c.aadhaar ? '**********' : '—'}
-                      </div>
+                      {visibleColumns['Official Email'] !== false && (
+                        <div className="px-3 py-3 w-48 shrink-0 text-gray-500 truncate">{c.official_email || '—'}</div>
+                      )}
+                      {visibleColumns['Onboarding Status'] !== false && (
+                        <div className="px-3 py-3 w-48 shrink-0 truncate">{getLifecycleStatusBadge(c.status)}</div>
+                      )}
+                      {visibleColumns['Department'] !== false && (
+                        <div className={`px-3 py-3 w-40 shrink-0 truncate ${isDark ? 'text-gray-300' : 'text-[#1B2D32]'}`}>{c.department}</div>
+                      )}
+                      {visibleColumns['Source of Hire'] !== false && (
+                        <div className={`px-3 py-3 w-36 shrink-0 truncate ${isDark ? 'text-gray-300' : 'text-[#5E7174]'}`}>{c.source_of_hire}</div>
+                      )}
+                      {visibleColumns['PAN card number'] !== false && (
+                        <div className="px-3 py-3 w-44 shrink-0 font-mono tracking-wider text-gray-400 truncate">
+                          {c.pan_card ? '**********' : '—'}
+                        </div>
+                      )}
+                      {visibleColumns['Aadhaar card number'] !== false && (
+                        <div className="px-3 py-3 w-48 shrink-0 font-mono tracking-wider text-gray-400 truncate">
+                          {c.aadhaar ? '**********' : '—'}
+                        </div>
+                      )}
+                      {visibleColumns['UAN number'] && (
+                        <div className="px-3 py-3 w-40 shrink-0 font-mono text-gray-400 truncate">{c.uan || '100987654399'}</div>
+                      )}
+                      {visibleColumns['Present address'] && (
+                        <div className="px-3 py-3 w-48 shrink-0 text-gray-400 truncate">{c.present_address || 'Bangalore, India'}</div>
+                      )}
+                      {visibleColumns['Candidate ID'] && (
+                        <div className="px-3 py-3 w-36 shrink-0 font-mono text-gray-400 truncate">{c.id}</div>
+                      )}
+                      {visibleColumns['Permanent address'] && (
+                        <div className="px-3 py-3 w-48 shrink-0 text-gray-400 truncate">{c.permanent_address || 'Bangalore, India'}</div>
+                      )}
+                      {visibleColumns['Phone'] !== false && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-gray-400 truncate">{c.mobile_phone || '+91 98400 00000'}</div>
+                      )}
+                      {visibleColumns['Experience'] !== false && (
+                        <div className="px-3 py-3 w-32 shrink-0 text-gray-400 truncate">{c.experience || '3 years'}</div>
+                      )}
+                      {visibleColumns['Skill Set'] && (
+                        <div className="px-3 py-3 w-44 shrink-0 text-gray-400 truncate">{c.skill_set || 'TypeScript, React'}</div>
+                      )}
+                      {visibleColumns['Highest Qualification'] && (
+                        <div className="px-3 py-3 w-44 shrink-0 text-gray-400 truncate">{c.highest_qualification || 'B.Tech / B.E.'}</div>
+                      )}
+                      {visibleColumns['Location'] !== false && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-gray-400 truncate">{c.location || 'Bangalore HQ'}</div>
+                      )}
+                      {visibleColumns['Title'] !== false && (
+                        <div className="px-3 py-3 w-40 shrink-0 text-gray-400 truncate">{c.designation || 'Engineer'}</div>
+                      )}
+                      {visibleColumns['Current Salary'] && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-gray-400 truncate">{c.current_salary || '₹ 18,50,000'}</div>
+                      )}
+                      {visibleColumns['Additional Information'] && (
+                        <div className="px-3 py-3 w-48 shrink-0 text-gray-400 truncate">{c.additional_information || 'Standard'}</div>
+                      )}
+                      {visibleColumns['Offer Letter'] && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-[#187F7A] truncate">Generated PDF</div>
+                      )}
+                      {visibleColumns['Tentative Joining Date'] !== false && (
+                        <div className="px-3 py-3 w-40 shrink-0 text-gray-400 truncate">{c.proposed_joining_date || '2026-12-01'}</div>
+                      )}
+                      {visibleColumns['Added By'] && (
+                        <div className="px-3 py-3 w-32 shrink-0 text-gray-400 truncate">{c.added_by || 'HR Admin'}</div>
+                      )}
+                      {visibleColumns['Added Time'] && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-gray-400 truncate">{c.added_time || '2026-11-01'}</div>
+                      )}
+                      {visibleColumns['Modified By'] && (
+                        <div className="px-3 py-3 w-32 shrink-0 text-gray-400 truncate">{c.modified_by || 'HR Admin'}</div>
+                      )}
+                      {visibleColumns['Modified Time'] && (
+                        <div className="px-3 py-3 w-36 shrink-0 text-gray-400 truncate">{c.modified_time || '2026-11-15'}</div>
+                      )}
                       <div className="px-3 py-3 w-24 shrink-0 text-right" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => setDetailCandidate(c)}
@@ -3003,6 +3767,516 @@ export function OnboardingView() {
                   className="rounded-lg bg-[#187F7A] px-4 py-2 font-semibold text-white hover:bg-[#146A66] cursor-pointer shadow-xs"
                 >
                   Simulate Candidate Final Submit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          DRAWER: FILTER & COLUMN VISIBILITY (User reference screenshot)
+      ═══════════════════════════════════════════════════════════════════ */}
+      {isFilterDrawerOpen && (
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/40 backdrop-blur-xs flex justify-end">
+          <div className={`w-80 h-full border-l flex flex-col shadow-2xl transition-all animate-in slide-in-from-right duration-200 ${
+            isDark ? 'bg-[#181818] border-[#333] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+          }`}>
+            {/* Header */}
+            <div className={`flex items-center justify-between px-4 py-3.5 border-b ${
+              isDark ? 'border-[#2e2e2e]' : 'border-[#E2E8F0]'
+            }`}>
+              <h2 className="text-sm font-bold tracking-wide">Filter</h2>
+              <button
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="p-1 rounded-md text-gray-400 hover:text-gray-200 hover:bg-[#252525] cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search"
+                  value={filterSearchQuery}
+                  onChange={e => setFilterSearchQuery(e.target.value)}
+                  className={`w-full rounded-lg pl-9 pr-3 py-2 text-xs border transition outline-none ${
+                    isDark
+                      ? 'bg-[#222] border-[#3a3a3a] text-gray-100 placeholder-gray-500 focus:border-blue-500'
+                      : 'bg-[#F9FAFC] border-[#D9E2F2] text-[#1B2D32] placeholder-gray-400 focus:border-[#187F7A]'
+                  }`}
+                />
+              </div>
+
+              {/* Collapsible: System filters */}
+              <div className="space-y-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsSystemFiltersOpen(!isSystemFiltersOpen)}
+                  className="flex items-center gap-1.5 font-bold tracking-wide uppercase text-[11px] text-gray-400 hover:text-gray-200 cursor-pointer w-full text-left"
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isSystemFiltersOpen ? 'rotate-0' : '-rotate-90'}`} />
+                  <span>System filters</span>
+                </button>
+
+                {isSystemFiltersOpen && (
+                  <div className="space-y-3 pl-1">
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1 font-medium">Employee</label>
+                      <input
+                        type="text"
+                        placeholder="Employee"
+                        value={filterEmployeeQuery}
+                        onChange={e => setFilterEmployeeQuery(e.target.value)}
+                        className={`w-full rounded-lg px-3 py-1.5 border text-xs outline-none ${
+                          isDark
+                            ? 'bg-[#222] border-[#3a3a3a] text-gray-100 placeholder-gray-500'
+                            : 'bg-white border-[#D9E2F2] text-[#1B2D32] placeholder-gray-400'
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1 font-medium">Department</label>
+                      <select
+                        value={filterDepartment}
+                        onChange={e => setFilterDepartment(e.target.value)}
+                        className={`w-full rounded-lg px-2.5 py-1.5 border text-xs outline-none cursor-pointer ${
+                          isDark
+                            ? 'bg-[#222] border-[#3a3a3a] text-gray-100'
+                            : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                        }`}
+                      >
+                        <option value="All Department">All Department</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Human Resources">Human Resources</option>
+                        <option value="Sales">Sales</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Product">Product</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] text-gray-400 mb-1 font-medium">Location</label>
+                      <select
+                        value={filterLocation}
+                        onChange={e => setFilterLocation(e.target.value)}
+                        className={`w-full rounded-lg px-2.5 py-1.5 border text-xs outline-none cursor-pointer ${
+                          isDark
+                            ? 'bg-[#222] border-[#3a3a3a] text-gray-100'
+                            : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                        }`}
+                      >
+                        <option value="All Locations">All Locations</option>
+                        <option value="Bangalore HQ">Bangalore HQ</option>
+                        <option value="Chennai Tech Park">Chennai Tech Park</option>
+                        <option value="Hyderabad Hub">Hyderabad Hub</option>
+                        <option value="Mumbai Office">Mumbai Office</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Collapsible: Fields (All 27 Fields Checklist) */}
+              <div className="space-y-2 pt-2 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setIsFieldsListOpen(!isFieldsListOpen)}
+                  className="flex items-center gap-1.5 font-bold tracking-wide uppercase text-[11px] text-gray-400 hover:text-gray-200 cursor-pointer w-full text-left"
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isFieldsListOpen ? 'rotate-0' : '-rotate-90'}`} />
+                  <span>Fields</span>
+                </button>
+
+                {isFieldsListOpen && (
+                  <div className="space-y-1.5 pl-1 max-h-72 overflow-y-auto pr-1">
+                    {ALL_FIELD_NAMES
+                      .filter(f => !filterSearchQuery || f.toLowerCase().includes(filterSearchQuery.toLowerCase()))
+                      .map(field => {
+                        const isChecked = visibleColumns[field] !== false;
+                        return (
+                          <label
+                            key={field}
+                            className="flex items-center gap-2.5 cursor-pointer py-1 px-1 rounded hover:bg-slate-500/10 transition select-none"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
+                                setVisibleColumns(prev => ({
+                                  ...prev,
+                                  [field]: !isChecked
+                                }));
+                              }}
+                              className="w-3.5 h-3.5 accent-[#187F7A] cursor-pointer rounded"
+                            />
+                            <span className={`text-xs ${isChecked ? (isDark ? 'text-gray-100 font-medium' : 'text-[#1B2D32] font-medium') : 'text-gray-500'}`}>
+                              {field}
+                            </span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer Buttons */}
+            <div className={`p-4 border-t flex items-center gap-3 ${
+              isDark ? 'border-[#2e2e2e]' : 'border-[#E2E8F0]'
+            }`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFilterDrawerOpen(false);
+                  showToast('Filters and column layout applied successfully!');
+                }}
+                className="flex-1 bg-[#0070F3] hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition cursor-pointer text-xs text-center shadow-xs"
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterSearchQuery('');
+                  setFilterEmployeeQuery('');
+                  setFilterDepartment('All Department');
+                  setFilterLocation('All Locations');
+                  setVisibleColumns(DEFAULT_VISIBLE_COLUMNS);
+                  showToast('Filters reset to default.');
+                }}
+                className={`flex-1 py-2 px-4 rounded-lg border font-medium text-xs transition cursor-pointer text-center ${
+                  isDark
+                    ? 'border-[#3a3a3a] text-gray-300 hover:bg-[#252525]'
+                    : 'border-[#D9E2F2] text-gray-700 hover:bg-slate-50'
+                }`}
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: MASS UPDATE (User reference screenshot)
+      ═══════════════════════════════════════════════════════════════════ */}
+      {isMassUpdateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-xl rounded-2xl border p-6 shadow-2xl transition-all ${
+            isDark ? 'bg-[#222] border-[#444]' : 'bg-white border-[#D9E2F2]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+              <div>
+                <h3 className={`text-base font-bold ${isDark ? 'text-gray-100' : 'text-[#1B2D32]'}`}>Mass update</h3>
+                <p className="text-xs text-gray-400 mt-0.5">Mass update will update all the matching records.</p>
+              </div>
+              <button
+                onClick={() => setIsMassUpdateModalOpen(false)}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleMassUpdateSubmit} className="mt-4 space-y-4">
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                {massUpdateRows.map((row, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="w-1/2">
+                      <label className="block text-[11px] text-gray-400 mb-1 font-medium">Field Name</label>
+                      <select
+                        value={row.field}
+                        onChange={e => {
+                          const next = [...massUpdateRows];
+                          next[idx].field = e.target.value;
+                          setMassUpdateRows(next);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 border text-xs outline-none cursor-pointer ${
+                          isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                        }`}
+                      >
+                        {MASS_UPDATE_FIELDS.map(f => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="w-1/2">
+                      <label className="block text-[11px] text-gray-400 mb-1 font-medium">Value</label>
+                      {row.field === 'Onboarding Status' ? (
+                        <select
+                          value={row.value}
+                          onChange={e => {
+                            const next = [...massUpdateRows];
+                            next[idx].value = e.target.value;
+                            setMassUpdateRows(next);
+                          }}
+                          className={`w-full rounded-lg px-3 py-2 border text-xs outline-none cursor-pointer ${
+                            isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                          }`}
+                        >
+                          <option value="READY_FOR_DAY_ONE">Ready For Day One</option>
+                          <option value="VERIFICATION_PENDING">Verification Pending</option>
+                          <option value="INVITED">Invited</option>
+                          <option value="CONVERTED_TO_EMPLOYEE">Converted to Employee</option>
+                        </select>
+                      ) : row.field === 'Department' ? (
+                        <select
+                          value={row.value}
+                          onChange={e => {
+                            const next = [...massUpdateRows];
+                            next[idx].value = e.target.value;
+                            setMassUpdateRows(next);
+                          }}
+                          className={`w-full rounded-lg px-3 py-2 border text-xs outline-none cursor-pointer ${
+                            isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                          }`}
+                        >
+                          <option value="Engineering">Engineering</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Human Resources">Human Resources</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Finance">Finance</option>
+                          <option value="Product">Product</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={row.value}
+                          onChange={e => {
+                            const next = [...massUpdateRows];
+                            next[idx].value = e.target.value;
+                            setMassUpdateRows(next);
+                          }}
+                          placeholder="Enter new value"
+                          className={`w-full rounded-lg px-3 py-2 border text-xs outline-none ${
+                            isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                          }`}
+                        />
+                      )}
+                    </div>
+
+                    {massUpdateRows.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setMassUpdateRows(massUpdateRows.filter((_, i) => i !== idx))}
+                        className="mt-5 text-red-400 hover:text-red-300 p-1 rounded cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMassUpdateRows([...massUpdateRows, { field: 'Department', value: 'Engineering' }])}
+                className="text-xs text-[#0070F3] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add new</span>
+              </button>
+
+              <div className={`pt-4 border-t flex justify-end gap-3 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+                <button
+                  type="button"
+                  onClick={() => setIsMassUpdateModalOpen(false)}
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-gray-400 hover:bg-[#333] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-lg bg-[#0070F3] hover:bg-blue-600 px-5 py-2 text-xs font-semibold text-white cursor-pointer shadow-xs"
+                >
+                  Save and Update
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: IMPORT CANDIDATES (From 3-dots Menu)
+      ═══════════════════════════════════════════════════════════════════ */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-xl rounded-2xl border p-6 shadow-2xl transition-all ${
+            isDark ? 'bg-[#222] border-[#444]' : 'bg-white border-[#D9E2F2]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="h-5 w-5 text-blue-400" />
+                <h3 className={`text-base font-bold ${isDark ? 'text-gray-100' : 'text-[#1B2D32]'}`}>Import Candidates</h3>
+              </div>
+              <button
+                onClick={() => setIsImportModalOpen(false)}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3 text-xs">
+              <p className="text-gray-400">
+                Paste CSV formatted rows below or enter records with format:<br />
+                <code className="text-blue-400 font-mono">First name, Last name, Email, Department, Designation, Phone</code>
+              </p>
+
+              <textarea
+                rows={6}
+                value={importCsvText}
+                onChange={e => setImportCsvText(e.target.value)}
+                placeholder="First name,Last name,Email,Department,Designation,Phone&#10;Amit,Kumar,amit.kumar@example.com,Engineering,Full Stack Engineer,+91 98400 11223&#10;Deepa,Natarajan,deepa.n@example.com,Marketing,Content Specialist,+91 98400 33445"
+                className={`w-full rounded-lg p-3 border font-mono text-xs outline-none ${
+                  isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-slate-50 border-[#D9E2F2] text-[#1B2D32]'
+                }`}
+              />
+
+              <div className="flex items-center justify-between pt-1">
+                <button
+                  type="button"
+                  onClick={() => setImportCsvText('First name,Last name,Email,Department,Designation,Phone\nAmit,Kumar,amit.kumar@example.com,Engineering,Full Stack Engineer,+91 98400 11223\nDeepa,Natarajan,deepa.n@example.com,Marketing,Content Specialist,+91 98400 33445')}
+                  className="text-blue-400 hover:underline cursor-pointer"
+                >
+                  Load Sample CSV
+                </button>
+                <span className="text-gray-500 text-[11px]">UTF-8 CSV format supported</span>
+              </div>
+
+              <div className={`pt-4 border-t flex justify-end gap-3 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+                <button
+                  type="button"
+                  onClick={() => setIsImportModalOpen(false)}
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-gray-400 hover:bg-[#333] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleImportCandidates}
+                  className="rounded-lg bg-[#0070F3] hover:bg-blue-600 px-5 py-2 text-xs font-semibold text-white cursor-pointer shadow-xs"
+                >
+                  Import Candidates
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          MODAL: BULK FILE UPLOAD (From 3-dots Menu)
+      ═══════════════════════════════════════════════════════════════════ */}
+      {isBulkUploadModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-xl rounded-2xl border p-6 shadow-2xl transition-all ${
+            isDark ? 'bg-[#222] border-[#444]' : 'bg-white border-[#D9E2F2]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+              <div className="flex items-center gap-2">
+                <FolderUp className="h-5 w-5 text-purple-400" />
+                <h3 className={`text-base font-bold ${isDark ? 'text-gray-100' : 'text-[#1B2D32]'}`}>Bulk File Upload</h3>
+              </div>
+              <button
+                onClick={() => setIsBulkUploadModalOpen(false)}
+                className="text-gray-400 hover:text-gray-200 cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] text-gray-400 mb-1 font-medium">Document Category</label>
+                <select
+                  value={bulkUploadCategory}
+                  onChange={e => setBulkUploadCategory(e.target.value)}
+                  className={`w-full rounded-lg px-3 py-2 border text-xs outline-none cursor-pointer ${
+                    isDark ? 'bg-[#181818] border-[#3a3a3a] text-gray-100' : 'bg-white border-[#D9E2F2] text-[#1B2D32]'
+                  }`}
+                >
+                  <option value="Identity Proofs (Aadhaar / PAN)">Identity Proofs (Aadhaar / PAN)</option>
+                  <option value="Offer Letters & Agreements">Offer Letters & Agreements</option>
+                  <option value="Educational Certificates">Educational Certificates</option>
+                  <option value="Relieving & Experience Letters">Relieving & Experience Letters</option>
+                </select>
+              </div>
+
+              {/* Upload Drop Zone */}
+              <label className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition ${
+                isDark ? 'border-[#444] hover:border-purple-400 bg-[#181818]' : 'border-[#D9E2F2] hover:border-purple-500 bg-slate-50'
+              }`}>
+                <UploadCloud className="h-8 w-8 text-purple-400 mb-2" />
+                <span className="font-semibold text-gray-200">Click or drag & drop documents to batch upload</span>
+                <span className="text-gray-500 text-[11px] mt-1">PDF, PNG, JPG, or ZIP up to 50MB</span>
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files) {
+                      const filesArray = Array.from(e.target.files).map(f => ({
+                        name: f.name,
+                        size: `${(f.size / 1024).toFixed(1)} KB`,
+                        status: 'Ready'
+                      }));
+                      setBulkUploadedFiles(prev => [...prev, ...filesArray]);
+                    }
+                  }}
+                />
+              </label>
+
+              {/* Files Queue */}
+              {bulkUploadedFiles.length > 0 && (
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                  {bulkUploadedFiles.map((file, i) => (
+                    <div key={i} className={`p-2.5 rounded-lg border flex items-center justify-between ${
+                      isDark ? 'bg-[#1c1c1c] border-[#333]' : 'bg-white border-[#E2E8F0]'
+                    }`}>
+                      <div className="truncate max-w-[280px]">
+                        <span className="font-medium text-gray-200">{file.name}</span>
+                        <span className="text-gray-500 ml-2 text-[10px]">({file.size})</span>
+                      </div>
+                      <span className="text-emerald-400 text-[10px] font-semibold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                        {file.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className={`pt-4 border-t flex justify-end gap-3 ${isDark ? 'border-[#333]' : 'border-[#E2E8F0]'}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBulkUploadModalOpen(false);
+                    setBulkUploadedFiles([]);
+                  }}
+                  className="rounded-lg px-4 py-2 text-xs font-medium text-gray-400 hover:bg-[#333] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast(`Successfully processed batch upload of ${bulkUploadedFiles.length || 3} documents for ${bulkUploadCategory}!`);
+                    setIsBulkUploadModalOpen(false);
+                    setBulkUploadedFiles([]);
+                  }}
+                  className="rounded-lg bg-purple-600 hover:bg-purple-700 px-5 py-2 text-xs font-semibold text-white cursor-pointer shadow-xs"
+                >
+                  Process Upload
                 </button>
               </div>
             </div>

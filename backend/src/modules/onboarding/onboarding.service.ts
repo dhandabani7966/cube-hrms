@@ -20,4 +20,36 @@ export class OnboardingService {
       throw new NotFoundException(e.message);
     }
   }
+
+  massUpdateCandidates(tenantId: string, candidateIds: string[], updates: Record<string, any>) {
+    return this.dataStore.massUpdateCandidates(tenantId, candidateIds, updates);
+  }
+
+  bulkDeleteCandidates(tenantId: string, candidateIds: string[]) {
+    return this.dataStore.bulkDeleteCandidates(tenantId, candidateIds);
+  }
+
+  bulkConvertCandidates(tenantId: string, candidateIds: string[], payload?: any) {
+    return this.dataStore.bulkConvertCandidates(tenantId, candidateIds, payload);
+  }
+
+  bulkInviteCandidates(tenantId: string, candidateIds: string[]) {
+    return this.dataStore.bulkInviteCandidates(tenantId, candidateIds);
+  }
+
+  bulkImportCandidates(tenantId: string, candidatesList: any[]) {
+    return this.dataStore.bulkImportCandidates(tenantId, candidatesList);
+  }
+
+  exportCandidates(tenantId: string) {
+    return this.dataStore.exportCandidates(tenantId);
+  }
+
+  getCandidatesAuditHistory(tenantId: string) {
+    return this.dataStore.getCandidatesAuditHistory(tenantId);
+  }
+
+  getAccessLogs(tenantId: string) {
+    return this.dataStore.getAccessLogs(tenantId);
+  }
 }
