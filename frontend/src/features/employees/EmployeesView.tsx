@@ -677,7 +677,41 @@ export function EmployeesView() {
         </div>
 
         {/* Right Side Tools */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className={`relative flex items-center rounded-lg border transition ${
+            isDark ? 'bg-[#1e1e1e] border-[#333]' : 'bg-slate-50 border-[#D9E2F2]'
+          }`}>
+            <Search className="absolute left-2.5 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={activeTab === 'userSpecific' ? userSearchText : searchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSearchQuery(val);
+                setUserSearchText(val);
+                if (activeTab !== 'employees' && activeTab !== 'userSpecific') {
+                  setActiveTab('employees');
+                }
+              }}
+              className={`w-36 sm:w-52 pl-8 pr-7 py-1.5 text-xs bg-transparent focus:outline-none transition-all ${
+                isDark ? 'text-gray-100 placeholder-gray-500' : 'text-[#1B2D32] placeholder-gray-400'
+              }`}
+            />
+            {(activeTab === 'userSpecific' ? userSearchText : searchQuery) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setUserSearchText('');
+                  setSelectedUserForOps(null);
+                }}
+                className="absolute right-2 text-gray-400 hover:text-gray-200 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
           <button
             onClick={() => {
               if (activeTab === 'departments') setIsAddDepartmentOpen(true);
@@ -685,29 +719,12 @@ export function EmployeesView() {
               else if (activeTab === 'hrProcess') setIsInitiateProcessOpen(true);
               else setIsAddEmployeeOpen(true);
             }}
-            className="h-8 w-8 rounded-lg bg-[#187F7A] hover:bg-[#146A66] flex items-center justify-center text-white transition shadow-sm cursor-pointer"
+            className="h-8 px-2.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] flex items-center justify-center text-white transition shadow-sm cursor-pointer"
             title="Create New"
+            aria-label="Create New"
           >
             <Plus className="h-4 w-4" />
           </button>
-          <button
-            onClick={() => {
-              if (activeTab !== 'userSpecific') setActiveTab('userSpecific');
-            }}
-            className={`p-2 rounded-lg transition cursor-pointer ${
-              isDark ? 'text-gray-400 hover:text-white hover:bg-[#334155]' : 'text-gray-600 hover:text-[#0B1730] hover:bg-slate-100'
-            }`}
-            title="Quick Search Employee"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-          <div className="h-8 w-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs font-bold text-white overflow-hidden shadow-sm">
-            <img
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100"
-              alt="Admin"
-              className="h-full w-full object-cover"
-            />
-          </div>
         </div>
       </div>
 
