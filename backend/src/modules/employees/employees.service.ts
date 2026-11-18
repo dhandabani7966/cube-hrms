@@ -95,6 +95,10 @@ export class EmployeesService {
     return this.dataStore.updateDesignation(tenantId, id, payload);
   }
 
+  deleteDesignation(tenantId: string, id: string) {
+    return this.dataStore.deleteDesignation(tenantId, id);
+  }
+
   getLocations(tenantId: string) {
     return this.dataStore.getLocations(tenantId);
   }

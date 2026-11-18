@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   ArrowUpDown,
+  Trash2,
   History,
   Layers,
   Sparkles,
@@ -189,6 +190,109 @@ export function EmployeesView() {
   const [isScopeMenuOpen, setIsScopeMenuOpen] = useState(false);
   const [isThreeDotsOpen, setIsThreeDotsOpen] = useState(false);
 
+  // Employee Sorting & Pagination
+  const [empSortField, setEmpSortField] = useState('');
+  const [empSortAsc, setEmpSortAsc] = useState(true);
+  const [empPageSize, setEmpPageSize] = useState(50);
+  const [empCurrentPage, setEmpCurrentPage] = useState(1);
+  const [isEmpPageSizeMenuOpen, setIsEmpPageSizeMenuOpen] = useState(false);
+  const [isEditEmpColumnsOpen, setIsEditEmpColumnsOpen] = useState(false);
+  const [visibleEmpColumns, setVisibleEmpColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cube_hrms_emp_columns');
+      return saved ? JSON.parse(saved) : {
+        code: true,
+        first_name: true,
+        last_name: true,
+        nick_name: true,
+        email: true,
+        photo: true,
+        department: true,
+        designation: true,
+        role: true,
+      };
+    } catch {
+      return { code: true, first_name: true, last_name: true, nick_name: true, email: true, photo: true, department: true, designation: true, role: true };
+    }
+  });
+  const [tempEmpColumns, setTempEmpColumns] = useState(visibleEmpColumns);
+
+  // Designations State
+  const [desigViewScope, setDesigViewScope] = useState('Designation View');
+  const [isDesigViewMenuOpen, setIsDesigViewMenuOpen] = useState(false);
+  const [desigDataScope, setDesigDataScope] = useState('All Data');
+  const [isDesigScopeMenuOpen, setIsDesigScopeMenuOpen] = useState(false);
+  const [isDesigFilterOpen, setIsDesigFilterOpen] = useState(false);
+  const [desigSearchText, setDesigSearchText] = useState('');
+  const [desigSortField, setDesigSortField] = useState('');
+  const [desigSortAsc, setDesigSortAsc] = useState(true);
+  const [selectedDesigIds, setSelectedDesigIds] = useState<string[]>([]);
+  const [desigPageSize, setDesigPageSize] = useState(25);
+  const [desigCurrentPage, setDesigCurrentPage] = useState(1);
+  const [isDesigPageSizeMenuOpen, setIsDesigPageSizeMenuOpen] = useState(false);
+  const [isEditDesigColumnsOpen, setIsEditDesigColumnsOpen] = useState(false);
+  const [visibleDesigColumns, setVisibleDesigColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cube_hrms_desig_columns');
+      return saved ? JSON.parse(saved) : {
+        title: true,
+        mail_alias: true,
+        added_by: true,
+        added_time: true,
+        modified_by: true,
+        modified_time: true,
+        code: true,
+      };
+    } catch {
+      return { title: true, mail_alias: true, added_by: true, added_time: true, modified_by: true, modified_time: true, code: true };
+    }
+  });
+  const [tempDesigColumns, setTempDesigColumns] = useState(visibleDesigColumns);
+
+  // Departments State
+  const [deptViewScope, setDeptViewScope] = useState('Department View');
+  const [isDeptViewMenuOpen, setIsDeptViewMenuOpen] = useState(false);
+  const [deptDataScope, setDeptDataScope] = useState('All Data');
+  const [isDeptScopeMenuOpen, setIsDeptScopeMenuOpen] = useState(false);
+  const [isDeptFilterOpen, setIsDeptFilterOpen] = useState(false);
+  const [deptSearchText, setDeptSearchText] = useState('');
+  const [deptSortField, setDeptSortField] = useState('');
+  const [deptSortAsc, setDeptSortAsc] = useState(true);
+  const [selectedDeptIds, setSelectedDeptIds] = useState<string[]>([]);
+  const [deptPageSize, setDeptPageSize] = useState(25);
+  const [deptCurrentPage, setDeptCurrentPage] = useState(1);
+  const [isDeptPageSizeMenuOpen, setIsDeptPageSizeMenuOpen] = useState(false);
+  const [isEditDeptColumnsOpen, setIsEditDeptColumnsOpen] = useState(false);
+  const [visibleDeptColumns, setVisibleDeptColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cube_hrms_dept_columns');
+      return saved ? JSON.parse(saved) : {
+        name: true,
+        mail_alias: true,
+        added_by: true,
+        added_time: true,
+        modified_by: true,
+        modified_time: true,
+        code: true,
+      };
+    } catch {
+      return { name: true, mail_alias: true, added_by: true, added_time: true, modified_by: true, modified_time: true, code: true };
+    }
+  });
+  const [tempDeptColumns, setTempDeptColumns] = useState(visibleDeptColumns);
+
+  // HR Process State
+  const [hrProcessFilter, setHrProcessFilter] = useState('All');
+  const [isProcessMenuOpen, setIsProcessMenuOpen] = useState(false);
+  const [isProcessFilterOpen, setIsProcessFilterOpen] = useState(false);
+  const [processSearchText, setProcessSearchText] = useState('');
+  const [processSortField, setProcessSortField] = useState('');
+  const [processSortAsc, setProcessSortAsc] = useState(true);
+  const [selectedProcessIds, setSelectedProcessIds] = useState<string[]>([]);
+  const [processPageSize, setProcessPageSize] = useState(25);
+  const [processCurrentPage, setProcessCurrentPage] = useState(1);
+  const [isProcessPageSizeMenuOpen, setIsProcessPageSizeMenuOpen] = useState(false);
+
   // Data lists
   const [employees, setEmployees] = useState<EmployeeItem[]>([]);
   const [departments, setDepartments] = useState<DepartmentItem[]>([]);
@@ -207,10 +311,6 @@ export function EmployeesView() {
   // User-specific operations state
   const [userSearchText, setUserSearchText] = useState('');
   const [selectedUserForOps, setSelectedUserForOps] = useState<EmployeeItem | null>(null);
-
-  // HR Process filter
-  const [hrProcessFilter, setHrProcessFilter] = useState('All');
-  const [isProcessMenuOpen, setIsProcessMenuOpen] = useState(false);
 
   // Modals state
   const [isAddEmployeeOpen, setIsAddEmployeeOpen] = useState(false);
@@ -291,6 +391,14 @@ export function EmployeesView() {
         setIsViewMenuOpen(false);
         setIsScopeMenuOpen(false);
         setIsProcessMenuOpen(false);
+        setIsEmpPageSizeMenuOpen(false);
+        setIsDesigViewMenuOpen(false);
+        setIsDesigScopeMenuOpen(false);
+        setIsDesigPageSizeMenuOpen(false);
+        setIsDeptViewMenuOpen(false);
+        setIsDeptScopeMenuOpen(false);
+        setIsDeptPageSizeMenuOpen(false);
+        setIsProcessPageSizeMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -301,11 +409,21 @@ export function EmployeesView() {
     };
   }, []);
 
-  // Filtered employees for Employee View
+  // 1. FILTERED & SORTED EMPLOYEES
   const filteredEmployees = useMemo(() => {
-    return employees.filter((emp) => {
+    const list = employees.filter((emp) => {
       if (filterDepartment !== 'ALL' && emp.department !== filterDepartment) return false;
       if (filterRole !== 'ALL' && emp.role !== filterRole) return false;
+
+      // viewScope filter
+      if (viewScope === 'Active Personnel' && emp.employment_status !== 'ACTIVE') return false;
+      if (viewScope === 'Probation Records' && !emp.employment_status.includes('PROBATION')) return false;
+
+      // dataScope filter
+      if (dataScope === 'HQ Only' && !emp.location?.toUpperCase().includes('HQ')) return false;
+      if (dataScope === 'My Direct Reports' && !emp.reporting_manager_id) return false;
+      if (dataScope === 'Current Department' && emp.department !== 'Engineering') return false;
+
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchName = `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(q);
@@ -316,23 +434,150 @@ export function EmployeesView() {
       }
       return true;
     });
-  }, [employees, filterDepartment, filterRole, searchQuery]);
 
-  // Filtered HR processes
+    // Sort
+    if (empSortField) {
+      list.sort((a, b) => {
+        let aVal = (a as any)[empSortField] || '';
+        let bVal = (b as any)[empSortField] || '';
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return empSortAsc ? -1 : 1;
+        if (aVal > bVal) return empSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [employees, filterDepartment, filterRole, searchQuery, viewScope, dataScope, empSortField, empSortAsc]);
+
+  const paginatedEmployees = useMemo(() => {
+    const start = (empCurrentPage - 1) * empPageSize;
+    return filteredEmployees.slice(start, start + empPageSize);
+  }, [filteredEmployees, empCurrentPage, empPageSize]);
+
+  // 2. FILTERED & SORTED DEPARTMENTS
+  const filteredDepartments = useMemo(() => {
+    const list = departments.filter((dept) => {
+      // viewScope filter
+      if (deptViewScope === 'Core Engineering' && !['Engineering', 'IT', 'Tech', 'R&D', 'Product'].some((k) => dept.name.includes(k))) return false;
+      if (deptViewScope === 'Management & Leadership' && !['Executive', 'Management', 'Operations'].some((k) => dept.name.includes(k))) return false;
+      if (deptViewScope === 'Operations & Support' && !['HR', 'Human Resources', 'Finance', 'Administration', 'Support'].some((k) => dept.name.includes(k))) return false;
+
+      // search filter
+      if (deptSearchText.trim()) {
+        const q = deptSearchText.toLowerCase();
+        const matchName = dept.name.toLowerCase().includes(q);
+        const matchCode = dept.code.toLowerCase().includes(q);
+        const matchAlias = (dept.mail_alias || '').toLowerCase().includes(q);
+        if (!matchName && !matchCode && !matchAlias) return false;
+      }
+      return true;
+    });
+
+    if (deptSortField) {
+      list.sort((a, b) => {
+        let aVal = (a as any)[deptSortField] || '';
+        let bVal = (b as any)[deptSortField] || '';
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return deptSortAsc ? -1 : 1;
+        if (aVal > bVal) return deptSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [departments, deptViewScope, deptSearchText, deptSortField, deptSortAsc]);
+
+  const paginatedDepartments = useMemo(() => {
+    const start = (deptCurrentPage - 1) * deptPageSize;
+    return filteredDepartments.slice(start, start + deptPageSize);
+  }, [filteredDepartments, deptCurrentPage, deptPageSize]);
+
+  // 3. FILTERED & SORTED DESIGNATIONS
+  const filteredDesignations = useMemo(() => {
+    const list = designations.filter((des) => {
+      // viewScope filter
+      if (desigViewScope === 'Executive Roles' && !['CEO', 'Director', 'Manager', 'VP', 'Chief', 'Head'].some((k) => des.title.includes(k))) return false;
+      if (desigViewScope === 'Staff & Engineering' && !['Engineer', 'Staff', 'Developer', 'Specialist', 'Architect'].some((k) => des.title.includes(k))) return false;
+      if (desigViewScope === 'Administration' && !['Admin', 'HR', 'Operations', 'Executive Assistant'].some((k) => des.title.includes(k))) return false;
+
+      // search filter
+      if (desigSearchText.trim()) {
+        const q = desigSearchText.toLowerCase();
+        const matchTitle = des.title.toLowerCase().includes(q);
+        const matchCode = des.code.toLowerCase().includes(q);
+        const matchAlias = (des.mail_alias || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchCode && !matchAlias) return false;
+      }
+      return true;
+    });
+
+    if (desigSortField) {
+      list.sort((a, b) => {
+        let aVal = (a as any)[desigSortField] || '';
+        let bVal = (b as any)[desigSortField] || '';
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return desigSortAsc ? -1 : 1;
+        if (aVal > bVal) return desigSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [designations, desigViewScope, desigSearchText, desigSortField, desigSortAsc]);
+
+  const paginatedDesignations = useMemo(() => {
+    const start = (desigCurrentPage - 1) * desigPageSize;
+    return filteredDesignations.slice(start, start + desigPageSize);
+  }, [filteredDesignations, desigCurrentPage, desigPageSize]);
+
+  // 4. FILTERED & SORTED HR PROCESSES
   const filteredProcesses = useMemo(() => {
-    if (hrProcessFilter === 'All') return hrProcesses;
-    return hrProcesses.filter(
-      (p) => p.process.toLowerCase() === hrProcessFilter.toLowerCase(),
-    );
-  }, [hrProcesses, hrProcessFilter]);
+    const list = hrProcesses.filter((p) => {
+      if (hrProcessFilter !== 'All' && p.process.toLowerCase() !== hrProcessFilter.toLowerCase()) return false;
+      if (processSearchText.trim()) {
+        const q = processSearchText.toLowerCase();
+        const matchKey = p.key_field.toLowerCase().includes(q);
+        const matchVal = p.value.toLowerCase().includes(q);
+        const matchReason = (p.reason || '').toLowerCase().includes(q);
+        const matchProc = p.process.toLowerCase().includes(q);
+        if (!matchKey && !matchVal && !matchReason && !matchProc) return false;
+      }
+      return true;
+    });
 
-  // Select all or deselect visible
-  const isAllSelected = filteredEmployees.length > 0 && selectedIds.length === filteredEmployees.length;
+    if (processSortField) {
+      list.sort((a, b) => {
+        let aVal = (a as any)[processSortField] || '';
+        let bVal = (b as any)[processSortField] || '';
+        if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+        if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+        if (aVal < bVal) return processSortAsc ? -1 : 1;
+        if (aVal > bVal) return processSortAsc ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return list;
+  }, [hrProcesses, hrProcessFilter, processSearchText, processSortField, processSortAsc]);
+
+  const paginatedProcesses = useMemo(() => {
+    const start = (processCurrentPage - 1) * processPageSize;
+    return filteredProcesses.slice(start, start + processPageSize);
+  }, [filteredProcesses, processCurrentPage, processPageSize]);
+
+  // Select all or deselect visible - Employees
+  const isAllSelected = paginatedEmployees.length > 0 && paginatedEmployees.every((e) => selectedIds.includes(e.id));
   const toggleSelectAll = () => {
     if (isAllSelected) {
-      setSelectedIds([]);
+      const pageIds = paginatedEmployees.map((e) => e.id);
+      setSelectedIds((prev) => prev.filter((id) => !pageIds.includes(id)));
     } else {
-      setSelectedIds(filteredEmployees.map((e) => e.id));
+      const pageIds = paginatedEmployees.map((e) => e.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...pageIds])));
     }
   };
 
@@ -340,6 +585,172 @@ export function EmployeesView() {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
+  };
+
+  const handleDeleteSelectedEmployees = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      for (const id of selectedIds) {
+        await apiFetch(`/employees/${id}`, { method: 'DELETE' });
+      }
+      showToast(`Deactivated ${selectedIds.length} employee record(s) from database.`);
+      setSelectedIds([]);
+      loadData();
+    } catch (err) {
+      console.error('Error deleting employees:', err);
+    }
+  };
+
+  // Select all or deselect visible - Departments
+  const isAllDeptSelected = paginatedDepartments.length > 0 && paginatedDepartments.every((d) => selectedDeptIds.includes(d.id));
+  const toggleSelectDeptAll = () => {
+    if (isAllDeptSelected) {
+      const pageIds = paginatedDepartments.map((d) => d.id);
+      setSelectedDeptIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginatedDepartments.map((d) => d.id);
+      setSelectedDeptIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const toggleSelectDeptOne = (id: string) => {
+    setSelectedDeptIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleDeleteSelectedDepartments = async () => {
+    if (selectedDeptIds.length === 0) return;
+    try {
+      for (const id of selectedDeptIds) {
+        await apiFetch(`/departments/${id}`, { method: 'DELETE' });
+      }
+      showToast(`Deactivated ${selectedDeptIds.length} department(s) successfully!`);
+      setSelectedDeptIds([]);
+      loadData();
+    } catch (err) {
+      console.error('Error deleting departments:', err);
+    }
+  };
+
+  const handleExportDepartmentsCSV = () => {
+    const listToExport = selectedDeptIds.length > 0
+      ? departments.filter((d) => selectedDeptIds.includes(d.id))
+      : filteredDepartments;
+
+    const headers = ['Department Name,Mail Alias,Added By,Added Time,Modified By,Modified Time,Department Code'];
+    const rows = listToExport.map((d) =>
+      `"${d.name}","${d.mail_alias || ''}","${d.added_by || ''}","${d.added_time || ''}","${d.modified_by || ''}","${d.modified_time || ''}","${d.code}"`
+    );
+
+    const blob = new Blob([[...headers, ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `departments_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Exported ${listToExport.length} department record(s) to CSV!`);
+  };
+
+  // Select all or deselect visible - Designations
+  const isAllDesigSelected = paginatedDesignations.length > 0 && paginatedDesignations.every((d) => selectedDesigIds.includes(d.id));
+  const toggleSelectDesigAll = () => {
+    if (isAllDesigSelected) {
+      const pageIds = paginatedDesignations.map((d) => d.id);
+      setSelectedDesigIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginatedDesignations.map((d) => d.id);
+      setSelectedDesigIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const toggleSelectDesigOne = (id: string) => {
+    setSelectedDesigIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleDeleteSelectedDesignations = async () => {
+    if (selectedDesigIds.length === 0) return;
+    try {
+      for (const id of selectedDesigIds) {
+        await apiFetch(`/designations/${id}`, { method: 'DELETE' });
+      }
+      showToast(`Deactivated ${selectedDesigIds.length} designation(s) successfully!`);
+      setSelectedDesigIds([]);
+      loadData();
+    } catch (err) {
+      console.error('Error deleting designations:', err);
+    }
+  };
+
+  const handleExportDesignationsCSV = () => {
+    const listToExport = selectedDesigIds.length > 0
+      ? designations.filter((d) => selectedDesigIds.includes(d.id))
+      : filteredDesignations;
+
+    const headers = ['Designation Name,Mail Alias,Added By,Added Time,Modified By,Modified Time,Designation Code'];
+    const rows = listToExport.map((d) =>
+      `"${d.title}","${d.mail_alias || ''}","${d.added_by || ''}","${d.added_time || ''}","${d.modified_by || ''}","${d.modified_time || ''}","${d.code}"`
+    );
+
+    const blob = new Blob([[...headers, ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `designations_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Exported ${listToExport.length} designation record(s) to CSV!`);
+  };
+
+  // Select all or deselect visible - HR Processes
+  const isAllProcessSelected = paginatedProcesses.length > 0 && paginatedProcesses.every((p) => selectedProcessIds.includes(p.id));
+  const toggleSelectProcessAll = () => {
+    if (isAllProcessSelected) {
+      const pageIds = paginatedProcesses.map((p) => p.id);
+      setSelectedProcessIds((prev) => prev.filter((id) => !pageIds.includes(id)));
+    } else {
+      const pageIds = paginatedProcesses.map((p) => p.id);
+      setSelectedProcessIds((prev) => Array.from(new Set([...prev, ...pageIds])));
+    }
+  };
+
+  const toggleSelectProcessOne = (id: string) => {
+    setSelectedProcessIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
+    );
+  };
+
+  const handleDeleteSelectedProcesses = () => {
+    if (selectedProcessIds.length === 0) return;
+    setHrProcesses((prev) => prev.filter((p) => !selectedProcessIds.includes(p.id)));
+    showToast(`Removed ${selectedProcessIds.length} process record(s) from view.`);
+    setSelectedProcessIds([]);
+  };
+
+  const handleExportProcessesCSV = () => {
+    const listToExport = selectedProcessIds.length > 0
+      ? hrProcesses.filter((p) => selectedProcessIds.includes(p.id))
+      : filteredProcesses;
+
+    const headers = ['Process Type,Key Field,Value,Effective Date,Reason,Status'];
+    const rows = listToExport.map((p) =>
+      `"${p.process}","${p.key_field}","${p.value}","${p.effective_date}","${p.reason}","${p.status}"`
+    );
+
+    const blob = new Blob([[...headers, ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `hr_processes_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`Exported ${listToExport.length} process record(s) to CSV!`);
   };
 
   // Submit Add Employee
@@ -775,7 +1186,10 @@ export function EmployeesView() {
                 )}
               </div>
               <button
-                onClick={() => showToast('Column view customization saved!')}
+                onClick={() => {
+                  setTempEmpColumns({ ...visibleEmpColumns });
+                  setIsEditEmpColumnsOpen(true);
+                }}
                 className={`text-xs font-semibold cursor-pointer ${isDark ? 'text-teal-400 hover:underline' : 'text-[#187F7A] hover:underline'}`}
               >
                 Edit
@@ -1018,9 +1432,17 @@ export function EmployeesView() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleExportCSV}
-                  className="px-3 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-medium transition cursor-pointer"
+                  className="px-3 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-medium transition cursor-pointer flex items-center gap-1.5"
                 >
-                  Export Selected
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export Selected</span>
+                </button>
+                <button
+                  onClick={handleDeleteSelectedEmployees}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Selected</span>
                 </button>
                 <button
                   onClick={() => {
@@ -1063,55 +1485,121 @@ export function EmployeesView() {
                       )}
                     </button>
                   </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Employee ID</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>First Name</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Last Name</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Nick name</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Email address</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold text-center">Photo</th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Department</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Designation</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer hover:opacity-80">
-                      <span>Role</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
+                  {visibleEmpColumns.code && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'employee_code') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('employee_code'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Employee ID</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.first_name && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'first_name') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('first_name'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>First Name</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.last_name && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'last_name') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('last_name'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Last Name</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.nick_name && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'nick_name') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('nick_name'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Nick name</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.email && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'work_email') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('work_email'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Email address</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.photo && (
+                    <th className="py-3 px-3 font-semibold text-center">Photo</th>
+                  )}
+                  {visibleEmpColumns.department && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'department') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('department'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Department</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.designation && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'designation') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('designation'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Designation</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleEmpColumns.role && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (empSortField === 'role') setEmpSortAsc(!empSortAsc);
+                          else { setEmpSortField('role'); setEmpSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Role</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className={`divide-y ${
@@ -1124,14 +1612,14 @@ export function EmployeesView() {
                       <span>Loading workforce records...</span>
                     </td>
                   </tr>
-                ) : filteredEmployees.length === 0 ? (
+                ) : paginatedEmployees.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="py-16 text-center text-gray-400">
                       No matching employee records found.
                     </td>
                   </tr>
                 ) : (
-                  filteredEmployees.map((emp) => {
+                  paginatedEmployees.map((emp) => {
                     const isSelected = selectedIds.includes(emp.id);
                     return (
                       <tr
@@ -1158,47 +1646,65 @@ export function EmployeesView() {
                             )}
                           </button>
                         </td>
-                        <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-gray-200' : 'text-[#0B1730]'}`}>
-                          {emp.employee_code}
-                        </td>
-                        <td className={`py-3 px-3 font-semibold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>
-                          {emp.first_name}
-                        </td>
-                        <td className={`py-3 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {emp.last_name}
-                        </td>
-                        <td className="py-3 px-3 text-gray-400">
-                          {emp.nick_name || emp.first_name}
-                        </td>
-                        <td className={`py-3 px-3 font-mono text-[11px] truncate max-w-[200px] ${
-                          isDark ? 'text-teal-300' : 'text-[#187F7A]'
-                        }`}>
-                          {emp.work_email}
-                        </td>
-                        <td className="py-3 px-3 text-center">
-                          <div className={`h-7 w-7 rounded-full mx-auto flex items-center justify-center text-[10px] font-bold overflow-hidden shadow-sm border ${
-                            isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-100 border-[#CBD5E1] text-[#0B1730]'
+                        {visibleEmpColumns.code && (
+                          <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-gray-200' : 'text-[#0B1730]'}`}>
+                            {emp.employee_code}
+                          </td>
+                        )}
+                        {visibleEmpColumns.first_name && (
+                          <td className={`py-3 px-3 font-semibold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>
+                            {emp.first_name}
+                          </td>
+                        )}
+                        {visibleEmpColumns.last_name && (
+                          <td className={`py-3 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {emp.last_name}
+                          </td>
+                        )}
+                        {visibleEmpColumns.nick_name && (
+                          <td className="py-3 px-3 text-gray-400">
+                            {emp.nick_name || emp.first_name}
+                          </td>
+                        )}
+                        {visibleEmpColumns.email && (
+                          <td className={`py-3 px-3 font-mono text-[11px] truncate max-w-[200px] ${
+                            isDark ? 'text-teal-300' : 'text-[#187F7A]'
                           }`}>
-                            {emp.photo ? (
-                              <img src={emp.photo} alt={emp.first_name} className="h-full w-full object-cover" />
-                            ) : (
-                              <span>{emp.first_name.charAt(0)}{emp.last_name.charAt(0)}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className={`py-3 px-3 font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
-                          {emp.department}
-                        </td>
-                        <td className={`py-3 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {emp.designation}
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize ${
-                            isDark ? 'bg-slate-800 text-gray-300' : 'bg-slate-100 text-gray-700'
-                          }`}>
-                            {emp.role || 'Team member'}
-                          </span>
-                        </td>
+                            {emp.work_email}
+                          </td>
+                        )}
+                        {visibleEmpColumns.photo && (
+                          <td className="py-3 px-3 text-center">
+                            <div className={`h-7 w-7 rounded-full mx-auto flex items-center justify-center text-[10px] font-bold overflow-hidden shadow-sm border ${
+                              isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-100 border-[#CBD5E1] text-[#0B1730]'
+                            }`}>
+                              {emp.photo ? (
+                                <img src={emp.photo} alt={emp.first_name} className="h-full w-full object-cover" />
+                              ) : (
+                                <span>{emp.first_name.charAt(0)}{emp.last_name.charAt(0)}</span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                        {visibleEmpColumns.department && (
+                          <td className={`py-3 px-3 font-medium ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                            {emp.department}
+                          </td>
+                        )}
+                        {visibleEmpColumns.designation && (
+                          <td className={`py-3 px-3 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                            {emp.designation}
+                          </td>
+                        )}
+                        {visibleEmpColumns.role && (
+                          <td className="py-3 px-3">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium capitalize ${
+                              isDark ? 'bg-slate-800 text-gray-300' : 'bg-slate-100 text-gray-700'
+                            }`}>
+                              {emp.role || 'Team member'}
+                            </span>
+                          </td>
+                        )}
                       </tr>
                     );
                   })
@@ -1215,14 +1721,62 @@ export function EmployeesView() {
               Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{filteredEmployees.length}</span>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 font-semibold">
-                <span>10</span>
-                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+              <div className="relative" data-dropdown="empPageSize">
+                <button
+                  onClick={() => setIsEmpPageSizeMenuOpen(!isEmpPageSizeMenuOpen)}
+                  className={`flex items-center gap-1 font-semibold px-2 py-1 rounded border cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-white' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
+                  }`}
+                >
+                  <span>{empPageSize}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isEmpPageSizeMenuOpen && (
+                  <div className={`absolute bottom-full mb-1 left-0 w-18 rounded-lg border shadow-xl py-1 z-30 ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {[10, 25, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setEmpPageSize(size);
+                          setEmpCurrentPage(1);
+                          setIsEmpPageSizeMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 transition cursor-pointer ${
+                          empPageSize === size
+                            ? isDark ? 'bg-teal-950 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <button className="hover:opacity-80 cursor-pointer">&lt;</button>
-                <span>1 - {Math.min(10, filteredEmployees.length)}</span>
-                <button className="hover:opacity-80 cursor-pointer">&gt;</button>
+                <button
+                  disabled={empCurrentPage <= 1}
+                  onClick={() => setEmpCurrentPage((p) => Math.max(1, p - 1))}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &lt;
+                </button>
+                <span>
+                  {filteredEmployees.length === 0 ? 0 : (empCurrentPage - 1) * empPageSize + 1} - {Math.min(empCurrentPage * empPageSize, filteredEmployees.length)}
+                </span>
+                <button
+                  disabled={empCurrentPage * empPageSize >= filteredEmployees.length}
+                  onClick={() => setEmpCurrentPage((p) => p + 1)}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &gt;
+                </button>
               </div>
             </div>
           </div>
@@ -1593,26 +2147,91 @@ export function EmployeesView() {
           {/* Subheader */}
           <div className="flex items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-3">
-              <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
-              }`}>
-                <span>Department View</span>
-                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-              </button>
+              <div className="relative" data-dropdown="deptViewScope">
+                <button
+                  onClick={() => {
+                    setIsDeptViewMenuOpen(!isDeptViewMenuOpen);
+                    setIsDeptScopeMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{deptViewScope}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDeptViewMenuOpen && (
+                  <div className={`absolute left-0 mt-1 w-52 rounded-lg border shadow-xl py-1 z-30 text-xs ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {['Department View', 'Core Engineering', 'Management & Leadership', 'Operations & Support', 'All Departments'].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          setDeptViewScope(opt);
+                          setIsDeptViewMenuOpen(false);
+                          setDeptCurrentPage(1);
+                        }}
+                        className={`w-full text-left px-3 py-2 transition cursor-pointer ${
+                          deptViewScope === opt
+                            ? isDark ? 'bg-teal-950/60 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
-                onClick={() => showToast('Department view customized!')}
-                className={`text-xs font-semibold ${isDark ? 'text-teal-400 hover:underline' : 'text-[#187F7A] hover:underline'}`}
+                onClick={() => {
+                  setTempDeptColumns({ ...visibleDeptColumns });
+                  setIsEditDeptColumnsOpen(true);
+                }}
+                className={`text-xs font-semibold cursor-pointer ${isDark ? 'text-teal-400 hover:underline' : 'text-[#187F7A] hover:underline'}`}
               >
                 Edit
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
-              }`}>
-                <span>All Data</span>
-                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-              </button>
+              <div className="relative" data-dropdown="deptDataScope">
+                <button
+                  onClick={() => {
+                    setIsDeptScopeMenuOpen(!isDeptScopeMenuOpen);
+                    setIsDeptViewMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{deptDataScope}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDeptScopeMenuOpen && (
+                  <div className={`absolute right-0 mt-1 w-44 rounded-lg border shadow-xl py-1 z-30 text-xs ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {['All Data', 'Active Departments', 'HQ Departments'].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          setDeptDataScope(opt);
+                          setIsDeptScopeMenuOpen(false);
+                          setDeptCurrentPage(1);
+                        }}
+                        className={`w-full text-left px-3 py-2 transition cursor-pointer ${
+                          deptDataScope === opt
+                            ? isDark ? 'bg-teal-950/60 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setIsAddDepartmentOpen(true)}
                 className="px-3.5 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-xs font-semibold text-white shadow-sm transition cursor-pointer flex items-center gap-1.5"
@@ -1620,13 +2239,93 @@ export function EmployeesView() {
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Department</span>
               </button>
-              <button className={`p-1.5 rounded-lg border ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400' : 'bg-white border-[#CBD5E1] text-[#5E7174]'
-              }`}>
+              <button
+                onClick={() => setIsDeptFilterOpen(!isDeptFilterOpen)}
+                className={`p-1.5 rounded-lg border cursor-pointer transition ${
+                  isDeptFilterOpen
+                    ? isDark ? 'bg-teal-950/60 border-teal-500 text-teal-300' : 'bg-teal-50 border-[#187F7A] text-[#187F7A]'
+                    : isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400 hover:text-white' : 'bg-white border-[#CBD5E1] text-[#5E7174] hover:text-[#0B1730]'
+                }`}
+                title="Filter Departments"
+              >
                 <FilterTaperedIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
+
+          {/* Department Search & Filter Bar */}
+          {isDeptFilterOpen && (
+            <div className={`rounded-xl border p-3 flex items-center gap-3 text-xs transition-colors shadow-sm ${
+              isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#E2E8F0]'
+            }`}>
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Filter by department name, code or alias..."
+                  value={deptSearchText}
+                  onChange={(e) => {
+                    setDeptSearchText(e.target.value);
+                    setDeptCurrentPage(1);
+                  }}
+                  className={`w-full pl-8 pr-3 py-1.5 rounded-lg border text-xs focus:outline-none transition ${
+                    isDark
+                      ? 'bg-[#0F172A] border-[#334155] text-white placeholder-gray-500 focus:border-teal-500'
+                      : 'bg-white border-[#CBD5E1] text-[#0B1730] placeholder-gray-400 focus:border-[#187F7A]'
+                  }`}
+                />
+              </div>
+              {deptSearchText && (
+                <button
+                  onClick={() => {
+                    setDeptSearchText('');
+                    setDeptCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer ${
+                    isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Department Bulk Selection Dock */}
+          {selectedDeptIds.length > 0 && (
+            <div className={`flex items-center justify-between rounded-xl px-5 py-2.5 text-xs font-semibold shadow-md border ${
+              isDark ? 'bg-teal-950/60 border-teal-700/60 text-teal-200' : 'bg-teal-50 border-teal-200 text-[#187F7A]'
+            }`}>
+              <div className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" />
+                <span>{selectedDeptIds.length} department(s) selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportDepartmentsCSV}
+                  className="px-3 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export Selected</span>
+                </button>
+                <button
+                  onClick={handleDeleteSelectedDepartments}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Selected</span>
+                </button>
+                <button
+                  onClick={() => setSelectedDeptIds([])}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                    isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Departments Table */}
           <div className={`rounded-xl border overflow-x-auto shadow-sm transition-colors ${
@@ -1638,90 +2337,244 @@ export function EmployeesView() {
                   isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#475569]'
                 }`}>
                   <th className="py-3 px-3 w-8">
-                    <Square className="h-4 w-4 text-gray-400" />
+                    <button onClick={toggleSelectDeptAll} className="flex items-center cursor-pointer">
+                      {isAllDeptSelected ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
                   </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Department Name</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Mail Alias</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Added By</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Added Time</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Modified By</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Modified Time</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Department Code</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
+                  {visibleDeptColumns.name && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'name') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('name'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Department Name</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.mail_alias && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'mail_alias') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('mail_alias'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Mail Alias</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.added_by && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'added_by') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('added_by'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Added By</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.added_time && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'added_time') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('added_time'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Added Time</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.modified_by && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'modified_by') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('modified_by'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Modified By</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.modified_time && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'modified_time') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('modified_time'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Modified Time</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDeptColumns.code && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (deptSortField === 'code') setDeptSortAsc(!deptSortAsc);
+                          else { setDeptSortField('code'); setDeptSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Department Code</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className={`divide-y ${
                 isDark ? 'divide-[#334155] text-gray-300' : 'divide-[#F1F5F9] text-[#1B2D32]'
               }`}>
-                {departments.map((dept) => (
-                  <tr key={dept.id} className={`transition ${
-                    isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
-                  }`}>
-                    <td className="py-3 px-3">
-                      <Square className="h-4 w-4 text-gray-400" />
+                {paginatedDepartments.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-gray-400">
+                      No matching departments found.
                     </td>
-                    <td className={`py-3 px-3 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{dept.name}</td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-gray-400">{dept.mail_alias || '-'}</td>
-                    <td className="py-3 px-3 text-gray-500">{dept.added_by || '1 - Dhandabani - M'}</td>
-                    <td className="py-3 px-3 text-gray-400">{dept.added_time || '16-Nov-2026 02:58 PM'}</td>
-                    <td className="py-3 px-3 text-gray-500">{dept.modified_by || '1 - Dhandabani - M'}</td>
-                    <td className="py-3 px-3 text-gray-400">{dept.modified_time || '16-Nov-2026 02:58 PM'}</td>
-                    <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{dept.code}</td>
                   </tr>
-                ))}
+                ) : (
+                  paginatedDepartments.map((dept) => {
+                    const isSelected = selectedDeptIds.includes(dept.id);
+                    return (
+                      <tr
+                        key={dept.id}
+                        className={`transition cursor-pointer ${
+                          isSelected
+                            ? isDark ? 'bg-teal-950/30' : 'bg-teal-50/70'
+                            : isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
+                        }`}
+                        onClick={() => toggleSelectDeptOne(dept.id)}
+                      >
+                        <td className="py-3 px-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectDeptOne(dept.id);
+                            }}
+                            className="flex items-center cursor-pointer"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                            ) : (
+                              <Square className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </td>
+                        {visibleDeptColumns.name && (
+                          <td className={`py-3 px-3 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{dept.name}</td>
+                        )}
+                        {visibleDeptColumns.mail_alias && (
+                          <td className="py-3 px-3 font-mono text-[11px] text-gray-400">{dept.mail_alias || '-'}</td>
+                        )}
+                        {visibleDeptColumns.added_by && (
+                          <td className="py-3 px-3 text-gray-500">{dept.added_by || '1 - Dhandabani - M'}</td>
+                        )}
+                        {visibleDeptColumns.added_time && (
+                          <td className="py-3 px-3 text-gray-400">{dept.added_time || '16-Nov-2026 02:58 PM'}</td>
+                        )}
+                        {visibleDeptColumns.modified_by && (
+                          <td className="py-3 px-3 text-gray-500">{dept.modified_by || '1 - Dhandabani - M'}</td>
+                        )}
+                        {visibleDeptColumns.modified_time && (
+                          <td className="py-3 px-3 text-gray-400">{dept.modified_time || '16-Nov-2026 02:58 PM'}</td>
+                        )}
+                        {visibleDeptColumns.code && (
+                          <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{dept.code}</td>
+                        )}
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
+          {/* Department Pagination Bar */}
           <div className={`flex items-center justify-between py-2 text-xs border-t transition-colors ${
             isDark ? 'border-[#334155] text-gray-400' : 'border-[#E2E8F0] text-[#5E7174]'
           }`}>
             <div>
-              Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{departments.length}</span>
+              Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{filteredDepartments.length}</span>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 font-semibold">
-                <span>10</span>
-                <ChevronDown className="h-3 w-3 text-gray-400" />
+              <div className="relative" data-dropdown="deptPageSize">
+                <button
+                  onClick={() => setIsDeptPageSizeMenuOpen(!isDeptPageSizeMenuOpen)}
+                  className={`flex items-center gap-1 font-semibold px-2 py-1 rounded border cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-white' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
+                  }`}
+                >
+                  <span>{deptPageSize}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDeptPageSizeMenuOpen && (
+                  <div className={`absolute bottom-full mb-1 left-0 w-18 rounded-lg border shadow-xl py-1 z-30 ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {[10, 25, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setDeptPageSize(size);
+                          setDeptCurrentPage(1);
+                          setIsDeptPageSizeMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 transition cursor-pointer ${
+                          deptPageSize === size
+                            ? isDark ? 'bg-teal-950 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <button className="hover:opacity-80 cursor-pointer">&lt;</button>
-                <span>1 - {departments.length}</span>
-                <button className="hover:opacity-80 cursor-pointer">&gt;</button>
+                <button
+                  disabled={deptCurrentPage <= 1}
+                  onClick={() => setDeptCurrentPage((p) => Math.max(1, p - 1))}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &lt;
+                </button>
+                <span>
+                  {filteredDepartments.length === 0 ? 0 : (deptCurrentPage - 1) * deptPageSize + 1} - {Math.min(deptCurrentPage * deptPageSize, filteredDepartments.length)}
+                </span>
+                <button
+                  disabled={deptCurrentPage * deptPageSize >= filteredDepartments.length}
+                  onClick={() => setDeptCurrentPage((p) => p + 1)}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &gt;
+                </button>
               </div>
             </div>
           </div>
@@ -1736,26 +2589,91 @@ export function EmployeesView() {
           {/* Subheader */}
           <div className="flex items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-3">
-              <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
-              }`}>
-                <span>Designation View</span>
-                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-              </button>
+              <div className="relative" data-dropdown="desigViewScope">
+                <button
+                  onClick={() => {
+                    setIsDesigViewMenuOpen(!isDesigViewMenuOpen);
+                    setIsDesigScopeMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{desigViewScope}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDesigViewMenuOpen && (
+                  <div className={`absolute left-0 mt-1 w-52 rounded-lg border shadow-xl py-1 z-30 text-xs ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {['Designation View', 'Executive Roles', 'Staff & Engineering', 'Administration', 'All Designations'].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          setDesigViewScope(opt);
+                          setIsDesigViewMenuOpen(false);
+                          setDesigCurrentPage(1);
+                        }}
+                        className={`w-full text-left px-3 py-2 transition cursor-pointer ${
+                          desigViewScope === opt
+                            ? isDark ? 'bg-teal-950/60 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
-                onClick={() => showToast('Designation view customized!')}
-                className={`text-xs font-semibold ${isDark ? 'text-teal-400 hover:underline' : 'text-[#187F7A] hover:underline'}`}
+                onClick={() => {
+                  setTempDesigColumns({ ...visibleDesigColumns });
+                  setIsEditDesigColumnsOpen(true);
+                }}
+                className={`text-xs font-semibold cursor-pointer ${isDark ? 'text-teal-400 hover:underline' : 'text-[#187F7A] hover:underline'}`}
               >
                 Edit
               </button>
             </div>
             <div className="flex items-center gap-2">
-              <button className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
-              }`}>
-                <span>All Data</span>
-                <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-              </button>
+              <div className="relative" data-dropdown="desigDataScope">
+                <button
+                  onClick={() => {
+                    setIsDesigScopeMenuOpen(!isDesigScopeMenuOpen);
+                    setIsDesigViewMenuOpen(false);
+                  }}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-gray-200 hover:bg-[#334155]' : 'bg-white border-[#CBD5E1] text-[#0B1730] hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{desigDataScope}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDesigScopeMenuOpen && (
+                  <div className={`absolute right-0 mt-1 w-44 rounded-lg border shadow-xl py-1 z-30 text-xs ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {['All Data', 'Active Roles', 'Standard Roles'].map((opt) => (
+                      <button
+                        key={opt}
+                        onClick={() => {
+                          setDesigDataScope(opt);
+                          setIsDesigScopeMenuOpen(false);
+                          setDesigCurrentPage(1);
+                        }}
+                        className={`w-full text-left px-3 py-2 transition cursor-pointer ${
+                          desigDataScope === opt
+                            ? isDark ? 'bg-teal-950/60 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setIsAddDesignationOpen(true)}
                 className="px-3.5 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-xs font-semibold text-white shadow-sm transition cursor-pointer flex items-center gap-1.5"
@@ -1763,13 +2681,93 @@ export function EmployeesView() {
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Designation</span>
               </button>
-              <button className={`p-1.5 rounded-lg border ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400' : 'bg-white border-[#CBD5E1] text-[#5E7174]'
-              }`}>
+              <button
+                onClick={() => setIsDesigFilterOpen(!isDesigFilterOpen)}
+                className={`p-1.5 rounded-lg border cursor-pointer transition ${
+                  isDesigFilterOpen
+                    ? isDark ? 'bg-teal-950/60 border-teal-500 text-teal-300' : 'bg-teal-50 border-[#187F7A] text-[#187F7A]'
+                    : isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400 hover:text-white' : 'bg-white border-[#CBD5E1] text-[#5E7174] hover:text-[#0B1730]'
+                }`}
+                title="Filter Designations"
+              >
                 <FilterTaperedIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
+
+          {/* Designation Search & Filter Bar */}
+          {isDesigFilterOpen && (
+            <div className={`rounded-xl border p-3 flex items-center gap-3 text-xs transition-colors shadow-sm ${
+              isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#E2E8F0]'
+            }`}>
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Filter by designation title, code or alias..."
+                  value={desigSearchText}
+                  onChange={(e) => {
+                    setDesigSearchText(e.target.value);
+                    setDesigCurrentPage(1);
+                  }}
+                  className={`w-full pl-8 pr-3 py-1.5 rounded-lg border text-xs focus:outline-none transition ${
+                    isDark
+                      ? 'bg-[#0F172A] border-[#334155] text-white placeholder-gray-500 focus:border-teal-500'
+                      : 'bg-white border-[#CBD5E1] text-[#0B1730] placeholder-gray-400 focus:border-[#187F7A]'
+                  }`}
+                />
+              </div>
+              {desigSearchText && (
+                <button
+                  onClick={() => {
+                    setDesigSearchText('');
+                    setDesigCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer ${
+                    isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Designation Bulk Selection Dock */}
+          {selectedDesigIds.length > 0 && (
+            <div className={`flex items-center justify-between rounded-xl px-5 py-2.5 text-xs font-semibold shadow-md border ${
+              isDark ? 'bg-teal-950/60 border-teal-700/60 text-teal-200' : 'bg-teal-50 border-teal-200 text-[#187F7A]'
+            }`}>
+              <div className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" />
+                <span>{selectedDesigIds.length} designation(s) selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportDesignationsCSV}
+                  className="px-3 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export Selected</span>
+                </button>
+                <button
+                  onClick={handleDeleteSelectedDesignations}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Delete Selected</span>
+                </button>
+                <button
+                  onClick={() => setSelectedDesigIds([])}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                    isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Designations Table */}
           <div className={`rounded-xl border overflow-x-auto shadow-sm transition-colors ${
@@ -1781,90 +2779,244 @@ export function EmployeesView() {
                   isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#475569]'
                 }`}>
                   <th className="py-3 px-3 w-8">
-                    <Square className="h-4 w-4 text-gray-400" />
+                    <button onClick={toggleSelectDesigAll} className="flex items-center cursor-pointer">
+                      {isAllDesigSelected ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
                   </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Designation Name</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Mail Alias</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Added By</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Added Time</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Modified By</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Modified Time</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="py-3 px-3 font-semibold">
-                    <div className="flex items-center gap-1 cursor-pointer">
-                      <span>Designation Code</span>
-                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                    </div>
-                  </th>
+                  {visibleDesigColumns.title && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'title') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('title'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Designation Name</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.mail_alias && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'mail_alias') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('mail_alias'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Mail Alias</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.added_by && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'added_by') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('added_by'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Added By</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.added_time && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'added_time') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('added_time'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Added Time</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.modified_by && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'modified_by') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('modified_by'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Modified By</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.modified_time && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'modified_time') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('modified_time'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Modified Time</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
+                  {visibleDesigColumns.code && (
+                    <th className="py-3 px-3 font-semibold">
+                      <div
+                        onClick={() => {
+                          if (desigSortField === 'code') setDesigSortAsc(!desigSortAsc);
+                          else { setDesigSortField('code'); setDesigSortAsc(true); }
+                        }}
+                        className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                      >
+                        <span>Designation Code</span>
+                        <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className={`divide-y ${
                 isDark ? 'divide-[#334155] text-gray-300' : 'divide-[#F1F5F9] text-[#1B2D32]'
               }`}>
-                {designations.map((des) => (
-                  <tr key={des.id} className={`transition ${
-                    isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
-                  }`}>
-                    <td className="py-3 px-3">
-                      <Square className="h-4 w-4 text-gray-400" />
+                {paginatedDesignations.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-gray-400">
+                      No matching designations found.
                     </td>
-                    <td className={`py-3 px-3 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{des.title}</td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-gray-400">{des.mail_alias || '-'}</td>
-                    <td className="py-3 px-3 text-gray-500">{des.added_by || '1 - Dhandabani - M'}</td>
-                    <td className="py-3 px-3 text-gray-400">{des.added_time || '16-Nov-2026 02:58 PM'}</td>
-                    <td className="py-3 px-3 text-gray-500">{des.modified_by || '1 - Dhandabani - M'}</td>
-                    <td className="py-3 px-3 text-gray-400">{des.modified_time || '16-Nov-2026 02:58 PM'}</td>
-                    <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{des.code}</td>
                   </tr>
-                ))}
+                ) : (
+                  paginatedDesignations.map((des) => {
+                    const isSelected = selectedDesigIds.includes(des.id);
+                    return (
+                      <tr
+                        key={des.id}
+                        className={`transition cursor-pointer ${
+                          isSelected
+                            ? isDark ? 'bg-teal-950/30' : 'bg-teal-50/70'
+                            : isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
+                        }`}
+                        onClick={() => toggleSelectDesigOne(des.id)}
+                      >
+                        <td className="py-3 px-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectDesigOne(des.id);
+                            }}
+                            className="flex items-center cursor-pointer"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                            ) : (
+                              <Square className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </td>
+                        {visibleDesigColumns.title && (
+                          <td className={`py-3 px-3 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{des.title}</td>
+                        )}
+                        {visibleDesigColumns.mail_alias && (
+                          <td className="py-3 px-3 font-mono text-[11px] text-gray-400">{des.mail_alias || '-'}</td>
+                        )}
+                        {visibleDesigColumns.added_by && (
+                          <td className="py-3 px-3 text-gray-500">{des.added_by || '1 - Dhandabani - M'}</td>
+                        )}
+                        {visibleDesigColumns.added_time && (
+                          <td className="py-3 px-3 text-gray-400">{des.added_time || '16-Nov-2026 02:58 PM'}</td>
+                        )}
+                        {visibleDesigColumns.modified_by && (
+                          <td className="py-3 px-3 text-gray-500">{des.modified_by || '1 - Dhandabani - M'}</td>
+                        )}
+                        {visibleDesigColumns.modified_time && (
+                          <td className="py-3 px-3 text-gray-400">{des.modified_time || '16-Nov-2026 02:58 PM'}</td>
+                        )}
+                        {visibleDesigColumns.code && (
+                          <td className={`py-3 px-3 font-mono font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{des.code}</td>
+                        )}
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
+          {/* Designation Pagination Bar */}
           <div className={`flex items-center justify-between py-2 text-xs border-t transition-colors ${
             isDark ? 'border-[#334155] text-gray-400' : 'border-[#E2E8F0] text-[#5E7174]'
           }`}>
             <div>
-              Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{designations.length}</span>
+              Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{filteredDesignations.length}</span>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1 font-semibold">
-                <span>10</span>
-                <ChevronDown className="h-3 w-3 text-gray-400" />
+              <div className="relative" data-dropdown="desigPageSize">
+                <button
+                  onClick={() => setIsDesigPageSizeMenuOpen(!isDesigPageSizeMenuOpen)}
+                  className={`flex items-center gap-1 font-semibold px-2 py-1 rounded border cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-white' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
+                  }`}
+                >
+                  <span>{desigPageSize}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isDesigPageSizeMenuOpen && (
+                  <div className={`absolute bottom-full mb-1 left-0 w-18 rounded-lg border shadow-xl py-1 z-30 ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {[10, 25, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setDesigPageSize(size);
+                          setDesigCurrentPage(1);
+                          setIsDesigPageSizeMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 transition cursor-pointer ${
+                          desigPageSize === size
+                            ? isDark ? 'bg-teal-950 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <button className="hover:opacity-80 cursor-pointer">&lt;</button>
-                <span>1 - {designations.length}</span>
-                <button className="hover:opacity-80 cursor-pointer">&gt;</button>
+                <button
+                  disabled={desigCurrentPage <= 1}
+                  onClick={() => setDesigCurrentPage((p) => Math.max(1, p - 1))}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &lt;
+                </button>
+                <span>
+                  {filteredDesignations.length === 0 ? 0 : (desigCurrentPage - 1) * desigPageSize + 1} - {Math.min(desigCurrentPage * desigPageSize, filteredDesignations.length)}
+                </span>
+                <button
+                  disabled={desigCurrentPage * desigPageSize >= filteredDesignations.length}
+                  onClick={() => setDesigCurrentPage((p) => p + 1)}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &gt;
+                </button>
               </div>
             </div>
           </div>
@@ -1905,6 +3057,7 @@ export function EmployeesView() {
                         onClick={() => {
                           setHrProcessFilter(opt);
                           setIsProcessMenuOpen(false);
+                          setProcessCurrentPage(1);
                         }}
                         className={`w-full text-left px-3 py-2 transition cursor-pointer ${
                           hrProcessFilter === opt
@@ -1928,13 +3081,93 @@ export function EmployeesView() {
                 <Plus className="h-3.5 w-3.5" />
                 <span>Initiate Process</span>
               </button>
-              <button className={`p-1.5 rounded-lg border ${
-                isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400' : 'bg-white border-[#CBD5E1] text-[#5E7174]'
-              }`}>
+              <button
+                onClick={() => setIsProcessFilterOpen(!isProcessFilterOpen)}
+                className={`p-1.5 rounded-lg border cursor-pointer transition ${
+                  isProcessFilterOpen
+                    ? isDark ? 'bg-teal-950/60 border-teal-500 text-teal-300' : 'bg-teal-50 border-[#187F7A] text-[#187F7A]'
+                    : isDark ? 'bg-[#1E293B] border-[#334155] text-gray-400 hover:text-white' : 'bg-white border-[#CBD5E1] text-[#5E7174] hover:text-[#0B1730]'
+                }`}
+                title="Filter Processes"
+              >
                 <FilterTaperedIcon className="h-4 w-4" />
               </button>
             </div>
           </div>
+
+          {/* HR Process Search & Filter Bar */}
+          {isProcessFilterOpen && (
+            <div className={`rounded-xl border p-3 flex items-center gap-3 text-xs transition-colors shadow-sm ${
+              isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#E2E8F0]'
+            }`}>
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Filter by employee, target value or justification..."
+                  value={processSearchText}
+                  onChange={(e) => {
+                    setProcessSearchText(e.target.value);
+                    setProcessCurrentPage(1);
+                  }}
+                  className={`w-full pl-8 pr-3 py-1.5 rounded-lg border text-xs focus:outline-none transition ${
+                    isDark
+                      ? 'bg-[#0F172A] border-[#334155] text-white placeholder-gray-500 focus:border-teal-500'
+                      : 'bg-white border-[#CBD5E1] text-[#0B1730] placeholder-gray-400 focus:border-[#187F7A]'
+                  }`}
+                />
+              </div>
+              {processSearchText && (
+                <button
+                  onClick={() => {
+                    setProcessSearchText('');
+                    setProcessCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer ${
+                    isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                  }`}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Process Bulk Selection Dock */}
+          {selectedProcessIds.length > 0 && (
+            <div className={`flex items-center justify-between rounded-xl px-5 py-2.5 text-xs font-semibold shadow-md border ${
+              isDark ? 'bg-teal-950/60 border-teal-700/60 text-teal-200' : 'bg-teal-50 border-teal-200 text-[#187F7A]'
+            }`}>
+              <div className="flex items-center gap-2">
+                <CheckSquare className="h-4 w-4" />
+                <span>{selectedProcessIds.length} process record(s) selected</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleExportProcessesCSV}
+                  className="px-3 py-1.5 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Export Selected</span>
+                </button>
+                <button
+                  onClick={handleDeleteSelectedProcesses}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-medium transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Remove Selected</span>
+                </button>
+                <button
+                  onClick={() => setSelectedProcessIds([])}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                    isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* HR Process Table Header */}
           <div className={`rounded-xl border overflow-x-auto shadow-sm min-h-[300px] transition-colors ${
@@ -1945,42 +3178,141 @@ export function EmployeesView() {
                 <tr className={`border-b select-none font-semibold ${
                   isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-[#F8FAFC] border-[#E2E8F0] text-[#475569]'
                 }`}>
-                  <th className="py-3 px-4 font-semibold w-28">Status</th>
-                  <th className="py-3 px-4 font-semibold">Key Field</th>
-                  <th className="py-3 px-4 font-semibold">Value</th>
-                  <th className="py-3 px-4 font-semibold">Effective date</th>
-                  <th className="py-3 px-4 font-semibold">Process</th>
-                  <th className="py-3 px-4 font-semibold">Reason</th>
+                  <th className="py-3 px-3 w-8">
+                    <button onClick={toggleSelectProcessAll} className="flex items-center cursor-pointer">
+                      {isAllProcessSelected ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="py-3 px-4 font-semibold w-28">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'status') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('status'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Status</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="py-3 px-4 font-semibold">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'key_field') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('key_field'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Key Field</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="py-3 px-4 font-semibold">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'value') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('value'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Value</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="py-3 px-4 font-semibold">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'effective_date') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('effective_date'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Effective date</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="py-3 px-4 font-semibold">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'process') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('process'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Process</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="py-3 px-4 font-semibold">
+                    <div
+                      onClick={() => {
+                        if (processSortField === 'reason') setProcessSortAsc(!processSortAsc);
+                        else { setProcessSortField('reason'); setProcessSortAsc(true); }
+                      }}
+                      className="flex items-center gap-1 cursor-pointer hover:opacity-80"
+                    >
+                      <span>Reason</span>
+                      <ArrowUpDown className="h-3 w-3 text-gray-400" />
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${
                 isDark ? 'divide-[#334155] text-gray-300' : 'divide-[#F1F5F9] text-[#1B2D32]'
               }`}>
-                {filteredProcesses.length > 0 ? (
-                  filteredProcesses.map((proc) => (
-                    <tr key={proc.id} className={`transition ${
-                      isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
-                    }`}>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                            proc.status === 'Approved'
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : proc.status === 'Pending'
-                              ? 'bg-amber-50 text-amber-700 border-amber-200'
-                              : 'bg-teal-50 text-[#187F7A] border-teal-200'
-                          }`}
-                        >
-                          {proc.status}
-                        </span>
-                      </td>
-                      <td className={`py-3 px-4 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{proc.key_field}</td>
-                      <td className={`py-3 px-4 font-mono text-[11px] font-bold ${isDark ? 'text-teal-300' : 'text-[#187F7A]'}`}>{proc.value}</td>
-                      <td className="py-3 px-4 text-gray-400">{proc.effective_date}</td>
-                      <td className={`py-3 px-4 font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{proc.process}</td>
-                      <td className="py-3 px-4 text-gray-400 italic">{proc.reason}</td>
-                    </tr>
-                  ))
+                {paginatedProcesses.length > 0 ? (
+                  paginatedProcesses.map((proc) => {
+                    const isSelected = selectedProcessIds.includes(proc.id);
+                    return (
+                      <tr
+                        key={proc.id}
+                        className={`transition cursor-pointer ${
+                          isSelected
+                            ? isDark ? 'bg-teal-950/30' : 'bg-teal-50/70'
+                            : isDark ? 'hover:bg-[#334155]/40' : 'hover:bg-slate-50'
+                        }`}
+                        onClick={() => toggleSelectProcessOne(proc.id)}
+                      >
+                        <td className="py-3 px-3">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSelectProcessOne(proc.id);
+                            }}
+                            className="flex items-center cursor-pointer"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                            ) : (
+                              <Square className="h-4 w-4 text-gray-400" />
+                            )}
+                          </button>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              proc.status === 'Approved'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : proc.status === 'Pending'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-teal-50 text-[#187F7A] border-teal-200'
+                            }`}
+                          >
+                            {proc.status}
+                          </span>
+                        </td>
+                        <td className={`py-3 px-4 font-bold ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>{proc.key_field}</td>
+                        <td className={`py-3 px-4 font-mono text-[11px] font-bold ${isDark ? 'text-teal-300' : 'text-[#187F7A]'}`}>{proc.value}</td>
+                        <td className="py-3 px-4 text-gray-400">{proc.effective_date}</td>
+                        <td className={`py-3 px-4 font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{proc.process}</td>
+                        <td className="py-3 px-4 text-gray-400 italic">{proc.reason}</td>
+                      </tr>
+                    );
+                  })
                 ) : null}
               </tbody>
             </table>
@@ -1997,6 +3329,328 @@ export function EmployeesView() {
                 </p>
               </div>
             )}
+          </div>
+
+          {/* HR Process Pagination Bar */}
+          <div className={`flex items-center justify-between py-2 text-xs border-t transition-colors ${
+            isDark ? 'border-[#334155] text-gray-400' : 'border-[#E2E8F0] text-[#5E7174]'
+          }`}>
+            <div>
+              Total Record Count : <span className={`font-bold ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`}>{filteredProcesses.length}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="relative" data-dropdown="processPageSize">
+                <button
+                  onClick={() => setIsProcessPageSizeMenuOpen(!isProcessPageSizeMenuOpen)}
+                  className={`flex items-center gap-1 font-semibold px-2 py-1 rounded border cursor-pointer ${
+                    isDark ? 'bg-[#1E293B] border-[#334155] text-white' : 'bg-white border-[#CBD5E1] text-[#0B1730]'
+                  }`}
+                >
+                  <span>{processPageSize}</span>
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                </button>
+                {isProcessPageSizeMenuOpen && (
+                  <div className={`absolute bottom-full mb-1 left-0 w-18 rounded-lg border shadow-xl py-1 z-30 ${
+                    isDark ? 'bg-[#1E293B] border-[#334155]' : 'bg-white border-[#CBD5E1]'
+                  }`}>
+                    {[10, 25, 50].map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => {
+                          setProcessPageSize(size);
+                          setProcessCurrentPage(1);
+                          setIsProcessPageSizeMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 transition cursor-pointer ${
+                          processPageSize === size
+                            ? isDark ? 'bg-teal-950 text-teal-300 font-bold' : 'bg-teal-50 text-[#187F7A] font-bold'
+                            : isDark ? 'text-gray-300 hover:bg-[#334155]' : 'text-gray-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={processCurrentPage <= 1}
+                  onClick={() => setProcessCurrentPage((p) => Math.max(1, p - 1))}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &lt;
+                </button>
+                <span>
+                  {filteredProcesses.length === 0 ? 0 : (processCurrentPage - 1) * processPageSize + 1} - {Math.min(processCurrentPage * processPageSize, filteredProcesses.length)}
+                </span>
+                <button
+                  disabled={processCurrentPage * processPageSize >= filteredProcesses.length}
+                  onClick={() => setProcessCurrentPage((p) => p + 1)}
+                  className={`p-1 rounded cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isDark ? 'hover:bg-[#334155]' : 'hover:bg-slate-100'
+                  }`}
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: EDIT EMPLOYEE VIEW COLUMNS                                         */}
+      {/* ========================================================================= */}
+      {isEditEmpColumnsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl border shadow-2xl p-6 space-y-4 transition-colors ${
+            isDark ? 'bg-[#1E293B] border-[#334155] text-gray-100' : 'bg-white border-[#E2E8F0] text-[#1B2D32]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>
+                Edit Employee View Columns
+              </h3>
+              <button
+                onClick={() => setIsEditEmpColumnsOpen(false)}
+                className="text-gray-400 hover:opacity-80 p-1 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Select columns to display in the employee workforce table:
+            </p>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {[
+                { key: 'code', label: 'Employee ID' },
+                { key: 'first_name', label: 'First Name' },
+                { key: 'last_name', label: 'Last Name' },
+                { key: 'nick_name', label: 'Nick Name' },
+                { key: 'email', label: 'Email address' },
+                { key: 'photo', label: 'Photo' },
+                { key: 'department', label: 'Department' },
+                { key: 'designation', label: 'Designation' },
+                { key: 'role', label: 'Role' },
+              ].map((col) => {
+                const checked = (tempEmpColumns as any)[col.key] ?? true;
+                return (
+                  <div
+                    key={col.key}
+                    onClick={() => {
+                      setTempEmpColumns((prev: any) => ({ ...prev, [col.key]: !checked }));
+                    }}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs cursor-pointer transition select-none ${
+                      checked
+                        ? isDark ? 'bg-teal-950/40 border-teal-700/60 text-white' : 'bg-teal-50/60 border-teal-200 text-[#0B1730]'
+                        : isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-slate-50 border-[#E2E8F0] text-gray-500'
+                    }`}
+                  >
+                    <div className="shrink-0">
+                      {checked ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <span className="font-medium">{col.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={`flex items-center justify-end gap-2 pt-3 border-t ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <button
+                type="button"
+                onClick={() => setIsEditEmpColumnsOpen(false)}
+                className={`px-4 py-2 rounded-lg border font-semibold text-xs transition cursor-pointer ${
+                  isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVisibleEmpColumns(tempEmpColumns);
+                  localStorage.setItem('cube_hrms_emp_columns', JSON.stringify(tempEmpColumns));
+                  setIsEditEmpColumnsOpen(false);
+                  showToast('Employee view columns updated successfully!');
+                }}
+                className="px-5 py-2 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-semibold text-xs transition cursor-pointer shadow-sm"
+              >
+                Apply View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: EDIT DEPARTMENT VIEW COLUMNS                                       */}
+      {/* ========================================================================= */}
+      {isEditDeptColumnsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl border shadow-2xl p-6 space-y-4 transition-colors ${
+            isDark ? 'bg-[#1E293B] border-[#334155] text-gray-100' : 'bg-white border-[#E2E8F0] text-[#1B2D32]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>
+                Edit Department View Columns
+              </h3>
+              <button
+                onClick={() => setIsEditDeptColumnsOpen(false)}
+                className="text-gray-400 hover:opacity-80 p-1 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Select columns to display in the departments table:
+            </p>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {[
+                { key: 'name', label: 'Department Name' },
+                { key: 'mail_alias', label: 'Mail Alias' },
+                { key: 'added_by', label: 'Added By' },
+                { key: 'added_time', label: 'Added Time' },
+                { key: 'modified_by', label: 'Modified By' },
+                { key: 'modified_time', label: 'Modified Time' },
+                { key: 'code', label: 'Department Code' },
+              ].map((col) => {
+                const checked = (tempDeptColumns as any)[col.key] ?? true;
+                return (
+                  <div
+                    key={col.key}
+                    onClick={() => {
+                      setTempDeptColumns((prev: any) => ({ ...prev, [col.key]: !checked }));
+                    }}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs cursor-pointer transition select-none ${
+                      checked
+                        ? isDark ? 'bg-teal-950/40 border-teal-700/60 text-white' : 'bg-teal-50/60 border-teal-200 text-[#0B1730]'
+                        : isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-slate-50 border-[#E2E8F0] text-gray-500'
+                    }`}
+                  >
+                    <div className="shrink-0">
+                      {checked ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <span className="font-medium">{col.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={`flex items-center justify-end gap-2 pt-3 border-t ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <button
+                type="button"
+                onClick={() => setIsEditDeptColumnsOpen(false)}
+                className={`px-4 py-2 rounded-lg border font-semibold text-xs transition cursor-pointer ${
+                  isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVisibleDeptColumns(tempDeptColumns);
+                  localStorage.setItem('cube_hrms_dept_columns', JSON.stringify(tempDeptColumns));
+                  setIsEditDeptColumnsOpen(false);
+                  showToast('Department view columns updated successfully!');
+                }}
+                className="px-5 py-2 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-semibold text-xs transition cursor-pointer shadow-sm"
+              >
+                Apply View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: EDIT DESIGNATION VIEW COLUMNS                                      */}
+      {/* ========================================================================= */}
+      {isEditDesigColumnsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className={`w-full max-w-md rounded-2xl border shadow-2xl p-6 space-y-4 transition-colors ${
+            isDark ? 'bg-[#1E293B] border-[#334155] text-gray-100' : 'bg-white border-[#E2E8F0] text-[#1B2D32]'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <h3 className={`font-bold text-base ${isDark ? 'text-white' : 'text-[#0B1730]'}`}>
+                Edit Designation View Columns
+              </h3>
+              <button
+                onClick={() => setIsEditDesigColumnsOpen(false)}
+                className="text-gray-400 hover:opacity-80 p-1 rounded"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Select columns to display in the designations table:
+            </p>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {[
+                { key: 'title', label: 'Designation Name' },
+                { key: 'mail_alias', label: 'Mail Alias' },
+                { key: 'added_by', label: 'Added By' },
+                { key: 'added_time', label: 'Added Time' },
+                { key: 'modified_by', label: 'Modified By' },
+                { key: 'modified_time', label: 'Modified Time' },
+                { key: 'code', label: 'Designation Code' },
+              ].map((col) => {
+                const checked = (tempDesigColumns as any)[col.key] ?? true;
+                return (
+                  <div
+                    key={col.key}
+                    onClick={() => {
+                      setTempDesigColumns((prev: any) => ({ ...prev, [col.key]: !checked }));
+                    }}
+                    className={`flex items-center gap-3 p-2.5 rounded-lg border text-xs cursor-pointer transition select-none ${
+                      checked
+                        ? isDark ? 'bg-teal-950/40 border-teal-700/60 text-white' : 'bg-teal-50/60 border-teal-200 text-[#0B1730]'
+                        : isDark ? 'bg-[#0F172A] border-[#334155] text-gray-400' : 'bg-slate-50 border-[#E2E8F0] text-gray-500'
+                    }`}
+                  >
+                    <div className="shrink-0">
+                      {checked ? (
+                        <CheckSquare className={`h-4 w-4 ${isDark ? 'text-teal-400' : 'text-[#187F7A]'}`} />
+                      ) : (
+                        <Square className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
+                    <span className="font-medium">{col.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={`flex items-center justify-end gap-2 pt-3 border-t ${isDark ? 'border-[#334155]' : 'border-[#E2E8F0]'}`}>
+              <button
+                type="button"
+                onClick={() => setIsEditDesigColumnsOpen(false)}
+                className={`px-4 py-2 rounded-lg border font-semibold text-xs transition cursor-pointer ${
+                  isDark ? 'bg-[#0F172A] border-[#334155] text-gray-300 hover:text-white' : 'bg-slate-100 border-[#CBD5E1] text-gray-700 hover:bg-slate-200'
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVisibleDesigColumns(tempDesigColumns);
+                  localStorage.setItem('cube_hrms_desig_columns', JSON.stringify(tempDesigColumns));
+                  setIsEditDesigColumnsOpen(false);
+                  showToast('Designation view columns updated successfully!');
+                }}
+                className="px-5 py-2 rounded-lg bg-[#187F7A] hover:bg-[#146A66] text-white font-semibold text-xs transition cursor-pointer shadow-sm"
+              >
+                Apply View
+              </button>
+            </div>
           </div>
         </div>
       )}

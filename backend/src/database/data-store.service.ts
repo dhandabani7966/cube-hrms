@@ -1482,6 +1482,13 @@ export class DataStoreService {
     return desig;
   }
 
+  deleteDesignation(tenantId: string, id: string) {
+    const desig = this.designations.find((d) => d.tenant_id === tenantId && d.id === id);
+    if (!desig) throw new Error('Designation not found');
+    desig.status = 'INACTIVE';
+    return { success: true, message: 'Designation deactivated successfully' };
+  }
+
   getLocations(tenantId: string) {
     return this.locations.filter((l) => l.tenant_id === tenantId);
   }

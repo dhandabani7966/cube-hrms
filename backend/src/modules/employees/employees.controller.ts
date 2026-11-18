@@ -183,6 +183,12 @@ export class DesignationsController {
   updateDesignation(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() body: any) {
     return this.employeesService.updateDesignation(tenantId, id, body);
   }
+
+  @Delete(':id')
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'HR_ADMIN')
+  deleteDesignation(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.employeesService.deleteDesignation(tenantId, id);
+  }
 }
 
 @Controller('locations')
