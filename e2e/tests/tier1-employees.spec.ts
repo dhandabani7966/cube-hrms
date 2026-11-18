@@ -145,11 +145,12 @@ test.describe('Module 2: Employee Information & DBMS Overhaul', () => {
     await expect(page.getByRole('heading', { name: 'Initiate HR Process' })).toBeVisible();
 
     // Select employee and target using data-testid
+    const uniqueVal = `IT -> Cloud Architecture_${Date.now().toString().slice(-4)}`;
     await page.locator('[data-testid="proc-emp-select"]').selectOption({ index: 1 });
-    await page.locator('[data-testid="proc-value-input"]').fill('IT -> Cloud Architecture');
+    await page.locator('[data-testid="proc-value-input"]').fill(uniqueVal);
     await page.locator('[data-testid="proc-submit-btn"]').click();
 
     // Verify process is listed
-    await expect(page.getByText('IT -> Cloud Architecture')).toBeVisible();
+    await expect(page.getByText(uniqueVal)).toBeVisible();
   });
 });
