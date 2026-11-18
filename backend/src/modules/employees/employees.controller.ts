@@ -33,6 +33,25 @@ export class EmployeesController {
     return this.employeesService.getHrProcesses(tenantId);
   }
 
+  @Get('processes')
+  getAllHrProcesses(
+    @CurrentTenant() tenantId: string,
+    @Query('process') process?: string,
+  ) {
+    return this.employeesService.getHrProcesses(tenantId, process);
+  }
+
+  @Post('processes')
+  @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'HR_ADMIN', 'HR_MANAGER')
+  createHrProcess(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.employeesService.createHrProcess(tenantId, body);
+  }
+
+  @Get('insights/overview')
+  getInsights(@CurrentTenant() tenantId: string) {
+    return this.employeesService.getInsights(tenantId);
+  }
+
   @Post(':id/restore')
   @Roles('SUPER_ADMIN', 'TENANT_ADMIN', 'HR_ADMIN')
   restoreEmployee(@CurrentTenant() tenantId: string, @Param('id') id: string) {

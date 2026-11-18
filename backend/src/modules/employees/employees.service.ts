@@ -43,8 +43,16 @@ export class EmployeesService {
     return this.dataStore.getRecycleBin(tenantId);
   }
 
-  getHrProcesses(tenantId: string) {
-    return this.dataStore.getHrProcesses(tenantId);
+  getHrProcesses(tenantId: string, processFilter?: string) {
+    return this.dataStore.getHrProcesses(tenantId, processFilter);
+  }
+
+  createHrProcess(tenantId: string, payload: any) {
+    return this.dataStore.createHrProcess(tenantId, payload);
+  }
+
+  getInsights(tenantId: string) {
+    return this.dataStore.getInsights(tenantId);
   }
 
   getJobHistory(tenantId: string, employeeId: string) {

@@ -65,21 +65,15 @@ export class DataStoreService {
 
   private departments: any[] = [
     {
-      id: 'd-11111111-1111-1111-1111-111111111110',
-      tenant_id: TENANT_A_ID,
-      name: 'Executive Office',
-      code: 'EXEC',
-      parent_department_id: null,
-      lead_employee_id: 'e-11111111-1111-1111-1111-111111111111',
-      lead_name: 'David Miller',
-      status: 'ACTIVE',
-      created_at: '2026-01-01T00:00:00.000Z',
-    },
-    {
       id: 'd-11111111-1111-1111-1111-111111111111',
       tenant_id: TENANT_A_ID,
-      name: 'Engineering',
-      code: 'ENG',
+      name: 'IT',
+      code: 'IT',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
       parent_department_id: null,
       lead_employee_id: 'e-11111111-1111-1111-1111-111111111112',
       lead_name: 'Sarah Jenkins',
@@ -89,8 +83,45 @@ export class DataStoreService {
     {
       id: 'd-11111111-1111-1111-1111-111111111112',
       tenant_id: TENANT_A_ID,
-      name: 'Human Resources',
+      name: 'Marketing',
+      code: 'MKT',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      parent_department_id: null,
+      lead_employee_id: null,
+      lead_name: null,
+      status: 'ACTIVE',
+      created_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'd-11111111-1111-1111-1111-111111111110',
+      tenant_id: TENANT_A_ID,
+      name: 'Management',
+      code: 'MGMT',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      parent_department_id: null,
+      lead_employee_id: 'e-11111111-1111-1111-1111-111111111111',
+      lead_name: 'David Miller',
+      status: 'ACTIVE',
+      created_at: '2026-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'd-11111111-1111-1111-1111-111111111113',
+      tenant_id: TENANT_A_ID,
+      name: 'HR',
       code: 'HR',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:56 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:56 PM',
       parent_department_id: null,
       lead_employee_id: 'e-11111111-1111-1111-1111-111111111114',
       lead_name: 'Priya Natarajan',
@@ -98,13 +129,18 @@ export class DataStoreService {
       created_at: '2026-01-01T00:00:00.000Z',
     },
     {
-      id: 'd-11111111-1111-1111-1111-111111111113',
+      id: 'd-11111111-1111-1111-1111-111111111114',
       tenant_id: TENANT_A_ID,
-      name: 'Finance & Accounts',
-      code: 'FIN',
+      name: 'Engineering',
+      code: 'ENG',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:56 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:56 PM',
       parent_department_id: null,
-      lead_employee_id: null,
-      lead_name: null,
+      lead_employee_id: 'e-11111111-1111-1111-1111-111111111113',
+      lead_name: 'John Doe',
       status: 'ACTIVE',
       created_at: '2026-01-01T00:00:00.000Z',
     },
@@ -113,6 +149,11 @@ export class DataStoreService {
       tenant_id: TENANT_B_ID,
       name: 'Operations',
       code: 'OPS',
+      mail_alias: '',
+      added_by: '1 - Admin',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Admin',
+      modified_time: '16-Nov-2026 02:58 PM',
       parent_department_id: null,
       lead_employee_id: null,
       lead_name: null,
@@ -123,39 +164,73 @@ export class DataStoreService {
 
   private designations: any[] = [
     {
-      id: 'des-11111111-1111-1111-1111-111111111110',
-      tenant_id: TENANT_A_ID,
-      title: 'Chief Executive Officer',
-      code: 'CEO',
-      department_id: 'd-11111111-1111-1111-1111-111111111110',
-      grade_level: 'C-LEVEL',
-      status: 'ACTIVE',
-    },
-    {
       id: 'des-11111111-1111-1111-1111-111111111111',
       tenant_id: TENANT_A_ID,
-      title: 'Principal Software Engineer',
-      code: 'PSE',
-      department_id: 'd-11111111-1111-1111-1111-111111111111',
-      grade_level: 'L5',
-      status: 'ACTIVE',
-    },
-    {
-      id: 'des-11111111-1111-1111-1111-111111111112',
-      tenant_id: TENANT_A_ID,
-      title: 'Engineering Manager',
-      code: 'EM',
+      title: 'Manager',
+      code: 'MGR',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
       department_id: 'd-11111111-1111-1111-1111-111111111111',
       grade_level: 'M1',
       status: 'ACTIVE',
     },
     {
+      id: 'des-11111111-1111-1111-1111-111111111112',
+      tenant_id: TENANT_A_ID,
+      title: 'Administration',
+      code: 'ADM',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      department_id: 'd-11111111-1111-1111-1111-111111111110',
+      grade_level: 'L3',
+      status: 'ACTIVE',
+    },
+    {
+      id: 'des-11111111-1111-1111-1111-111111111110',
+      tenant_id: TENANT_A_ID,
+      title: 'CEO',
+      code: 'CEO',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      department_id: 'd-11111111-1111-1111-1111-111111111110',
+      grade_level: 'C-LEVEL',
+      status: 'ACTIVE',
+    },
+    {
       id: 'des-11111111-1111-1111-1111-111111111113',
       tenant_id: TENANT_A_ID,
-      title: 'HR Director',
-      code: 'HRD',
-      department_id: 'd-11111111-1111-1111-1111-111111111112',
-      grade_level: 'DIR',
+      title: 'Team Member',
+      code: 'TM',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      grade_level: 'L2',
+      status: 'ACTIVE',
+    },
+    {
+      id: 'des-11111111-1111-1111-1111-111111111114',
+      tenant_id: TENANT_A_ID,
+      title: 'Principal Software Engineer',
+      code: 'PSE',
+      mail_alias: '',
+      added_by: '1 - Dhandabani - M',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Dhandabani - M',
+      modified_time: '16-Nov-2026 02:58 PM',
+      department_id: 'd-11111111-1111-1111-1111-111111111114',
+      grade_level: 'L5',
       status: 'ACTIVE',
     },
     {
@@ -163,6 +238,11 @@ export class DataStoreService {
       tenant_id: TENANT_B_ID,
       title: 'Operations Director',
       code: 'OPD',
+      mail_alias: '',
+      added_by: '1 - Admin',
+      added_time: '16-Nov-2026 02:58 PM',
+      modified_by: '1 - Admin',
+      modified_time: '16-Nov-2026 02:58 PM',
       department_id: 'd-22222222-2222-2222-2222-222222222221',
       grade_level: 'DIR',
       status: 'ACTIVE',
@@ -270,6 +350,174 @@ export class DataStoreService {
       reporting_manager_id: 'e-11111111-1111-1111-1111-111111111111',
       employment_status: 'ACTIVE_CONFIRMED',
       created_at: '2023-03-10T00:00:00.000Z',
+    },
+    {
+      id: 'e-s20',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S20',
+      first_name: 'Christopher',
+      last_name: 'Brown',
+      nick_name: 'Chris',
+      work_email: 'christopherbrown@zylker.com',
+      personal_email: 'christopherbrown@zylker.com',
+      mobile_phone: '+91 98400 20020',
+      gender: 'Male',
+      date_of_birth: '1984-06-18',
+      joining_date: '2023-01-10',
+      department_id: 'd-11111111-1111-1111-1111-111111111110',
+      designation_id: 'des-11111111-1111-1111-1111-111111111112',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-01-10T00:00:00.000Z',
+    },
+    {
+      id: 'e-s19',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S19',
+      first_name: 'Michael',
+      last_name: 'Johnson',
+      nick_name: 'Mike',
+      work_email: 'michaeljohnson@zylker.com',
+      personal_email: 'michaeljohnson@zylker.com',
+      mobile_phone: '+91 98400 19019',
+      gender: 'Male',
+      date_of_birth: '1986-11-23',
+      joining_date: '2023-02-15',
+      department_id: 'd-11111111-1111-1111-1111-111111111110',
+      designation_id: 'des-11111111-1111-1111-1111-111111111112',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-02-15T00:00:00.000Z',
+    },
+    {
+      id: 'e-s18',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S18',
+      first_name: 'William',
+      last_name: 'Smith',
+      nick_name: 'William',
+      work_email: 'williamsmith@zylker.com',
+      personal_email: 'williamsmith@zylker.com',
+      mobile_phone: '+91 98400 18018',
+      gender: 'Male',
+      date_of_birth: '1991-03-12',
+      joining_date: '2023-04-01',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-04-01T00:00:00.000Z',
+    },
+    {
+      id: 'e-s17',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S17',
+      first_name: 'Amardeep',
+      last_name: 'Banjeet',
+      nick_name: 'Amardeep',
+      work_email: 'amardeepbanjeet@zylker.com',
+      personal_email: 'amardeepbanjeet@zylker.com',
+      mobile_phone: '+91 98400 17017',
+      gender: 'Male',
+      date_of_birth: '1993-08-05',
+      joining_date: '2023-05-15',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-05-15T00:00:00.000Z',
+    },
+    {
+      id: 'e-s16',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S16',
+      first_name: 'Andrea',
+      last_name: 'Garcia',
+      nick_name: 'Andrea',
+      work_email: 'andreagarcia@zylker.com',
+      personal_email: 'andreagarcia@zylker.com',
+      mobile_phone: '+91 98400 16016',
+      gender: 'Female',
+      date_of_birth: '1992-12-14',
+      joining_date: '2023-06-20',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-06-20T00:00:00.000Z',
+    },
+    {
+      id: 'e-s15',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S15',
+      first_name: 'Aparna',
+      last_name: 'Acharya',
+      nick_name: 'Aparna',
+      work_email: 'aparnaacharya@zylker.com',
+      personal_email: 'aparnaacharya@zylker.com',
+      mobile_phone: '+91 98400 15015',
+      gender: 'Female',
+      date_of_birth: '1994-04-28',
+      joining_date: '2023-07-10',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-07-10T00:00:00.000Z',
+    },
+    {
+      id: 'e-s14',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S14',
+      first_name: 'Emily',
+      last_name: 'Jones',
+      nick_name: 'Emily',
+      work_email: 'emilyjones@zylker.com',
+      personal_email: 'emilyjones@zylker.com',
+      mobile_phone: '+91 98400 14014',
+      gender: 'Female',
+      date_of_birth: '1996-09-03',
+      joining_date: '2023-08-01',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-08-01T00:00:00.000Z',
+    },
+    {
+      id: 'e-s13',
+      tenant_id: TENANT_A_ID,
+      employee_code: 'S13',
+      first_name: 'Isabella',
+      last_name: 'Lopez',
+      nick_name: 'Isabella',
+      work_email: 'isabellalopez@zylker.com',
+      personal_email: 'isabellalopez@zylker.com',
+      mobile_phone: '+91 98400 13013',
+      gender: 'Female',
+      date_of_birth: '1997-01-19',
+      joining_date: '2023-09-15',
+      department_id: 'd-11111111-1111-1111-1111-111111111111',
+      designation_id: 'des-11111111-1111-1111-1111-111111111113',
+      location_id: 'loc-11111111-1111-1111-1111-111111111111',
+      role: 'Team member',
+      photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+      employment_status: 'ACTIVE_CONFIRMED',
+      created_at: '2023-09-15T00:00:00.000Z',
     },
     {
       id: 'e-22222222-2222-2222-2222-222222222221',
@@ -697,6 +945,9 @@ export class DataStoreService {
         const loc = this.locations.find((l) => l.id === emp.location_id);
         return {
           ...emp,
+          nick_name: emp.nick_name || emp.first_name,
+          role: emp.role || 'Team member',
+          photo: emp.photo || null,
           department: dept ? dept.name : 'General',
           designation: desig ? desig.title : 'Team Member',
           location: loc ? loc.name : 'Bangalore HQ',
@@ -717,6 +968,9 @@ export class DataStoreService {
     const loc = this.locations.find((l) => l.id === emp.location_id);
     return {
       ...emp,
+      nick_name: emp.nick_name || emp.first_name,
+      role: emp.role || 'Team member',
+      photo: emp.photo || null,
       department: dept ? dept.name : 'General',
       designation: desig ? desig.title : 'Team Member',
       location: loc ? loc.name : 'Bangalore HQ',
@@ -751,10 +1005,13 @@ export class DataStoreService {
     const newEmp = {
       id,
       tenant_id: tenantId,
-      employee_code: data.employee_code || generatedCode,
+      employee_code: data.employee_code || data.employee_id || generatedCode,
       first_name: data.first_name,
       last_name: data.last_name || '',
-      work_email: data.work_email,
+      nick_name: data.nick_name || data.first_name,
+      role: data.role || 'Team member',
+      photo: data.photo || null,
+      work_email: data.work_email || `${data.first_name.toLowerCase()}.${(data.last_name || 'emp').toLowerCase()}@cubeai.internal`,
       personal_email: data.personal_email || '',
       mobile_phone: data.mobile_phone || '+91 9840000000',
       gender: data.gender || 'Not Specified',
@@ -899,31 +1156,190 @@ export class DataStoreService {
     return this.employees.filter((e) => e.tenant_id === tenantId && e.employment_status === 'INACTIVE');
   }
 
-  getHrProcesses(tenantId: string) {
-    return [
-      {
-        id: 'proc-1',
-        title: '2-Year Equipment Refresh Completed (IT Asset Clearance)',
-        status: 'COMPLETED',
-        category: 'IT Operations',
-        completed_at: '2026-10-15',
-      },
-      {
-        id: 'proc-2',
-        title: 'Annual Security Certification Renewal',
-        status: 'IN_PROGRESS',
-        category: 'Compliance',
-        triggered_at: '2026-11-10',
-        due_date: '2026-11-30',
-      },
-      {
-        id: 'proc-3',
-        title: 'Mandatory POSH Annual Refresher',
-        status: 'COMPLETED',
-        category: 'Legal & Compliance',
-        completed_at: '2026-09-01',
-      },
-    ];
+  private hrProcesses: any[] = [
+    {
+      id: 'proc-1',
+      tenant_id: TENANT_A_ID,
+      process: 'Department Change',
+      status: 'Approved',
+      key_field: 'EMP-10003 - John Doe',
+      value: 'Engineering -> Management',
+      effective_date: '15-Nov-2026',
+      reason: 'Internal Promotion & Role Alignment',
+      employee_id: 'e-11111111-1111-1111-1111-111111111113',
+      created_at: '2026-11-10T00:00:00.000Z',
+    },
+    {
+      id: 'proc-2',
+      tenant_id: TENANT_A_ID,
+      process: 'Location Change',
+      status: 'Pending',
+      key_field: 'EMP-10002 - Sarah Jenkins',
+      value: 'Bangalore HQ -> London Central',
+      effective_date: '01-Dec-2026',
+      reason: 'Global Expansion Leadership Transfer',
+      employee_id: 'e-11111111-1111-1111-1111-111111111112',
+      created_at: '2026-11-12T00:00:00.000Z',
+    },
+    {
+      id: 'proc-3',
+      tenant_id: TENANT_A_ID,
+      process: 'Designation Change',
+      status: 'Approved',
+      key_field: 'EMP-10004 - Priya Natarajan',
+      value: 'HR Manager -> HR Director',
+      effective_date: '01-Oct-2026',
+      reason: 'Annual Performance Appraisal Promotion',
+      employee_id: 'e-11111111-1111-1111-1111-111111111114',
+      created_at: '2026-10-01T00:00:00.000Z',
+    },
+  ];
+
+  getHrProcesses(tenantId: string, processFilter?: string) {
+    let list = this.hrProcesses.filter((p) => p.tenant_id === tenantId);
+    if (processFilter && processFilter !== 'All') {
+      list = list.filter((p) => p.process.toLowerCase() === processFilter.toLowerCase());
+    }
+    return list;
+  }
+
+  createHrProcess(tenantId: string, data: any) {
+    const id = `proc-${Date.now()}`;
+    const newProcess = {
+      id,
+      tenant_id: tenantId,
+      process: data.process || 'Department Change',
+      status: data.status || 'Pending',
+      key_field: data.key_field || data.employee_name || 'Employee',
+      value: data.value || `${data.current_value || ''} -> ${data.new_value || ''}`,
+      effective_date: data.effective_date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      reason: data.reason || 'Requested change',
+      employee_id: data.employee_id || null,
+      created_at: new Date().toISOString(),
+    };
+    this.hrProcesses.unshift(newProcess);
+
+    // Apply the change to the employee record if employee_id is provided
+    if (data.employee_id) {
+      const emp = this.employees.find((e) => e.tenant_id === tenantId && (e.id === data.employee_id || e.employee_code === data.employee_id));
+      if (emp) {
+        if (data.process === 'Department Change' && data.new_department_id) {
+          emp.department_id = data.new_department_id;
+        } else if (data.process === 'Designation Change' && data.new_designation_id) {
+          emp.designation_id = data.new_designation_id;
+        } else if (data.process === 'Location Change' && data.new_location_id) {
+          emp.location_id = data.new_location_id;
+        }
+        emp.updated_at = new Date().toISOString();
+        this.employeeJobHistories.push({
+          id: `jh-${Date.now()}`,
+          tenant_id: tenantId,
+          employee_id: emp.id,
+          change_type: data.process.toUpperCase().replace(/\s+/g, '_'),
+          effective_date: newProcess.effective_date,
+          remarks: data.reason,
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    return newProcess;
+  }
+
+  getInsights(tenantId: string) {
+    const tenantEmps = this.employees.filter((e) => e.tenant_id === tenantId && e.employment_status !== 'INACTIVE');
+    const totalHeadcount = tenantEmps.length;
+
+    // Designations breakdown
+    const desigMap = new Map<string, number>();
+    tenantEmps.forEach((e) => {
+      const d = this.designations.find((des) => des.id === e.designation_id)?.title || 'Team Member';
+      desigMap.set(d, (desigMap.get(d) || 0) + 1);
+    });
+    const designationsDistribution = Array.from(desigMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+      percentage: totalHeadcount ? Math.round((count / totalHeadcount) * 100) : 0,
+    }));
+
+    // Department breakdown
+    const deptMap = new Map<string, number>();
+    tenantEmps.forEach((e) => {
+      const d = this.departments.find((dep) => dep.id === e.department_id)?.name || 'General';
+      deptMap.set(d, (deptMap.get(d) || 0) + 1);
+    });
+    const departmentsDistribution = Array.from(deptMap.entries()).map(([name, count]) => ({
+      name,
+      count,
+      percentage: totalHeadcount ? Math.round((count / totalHeadcount) * 100) : 0,
+    }));
+
+    // Gender breakdown
+    let maleCount = 0;
+    let femaleCount = 0;
+    tenantEmps.forEach((e) => {
+      if ((e.gender || '').toLowerCase() === 'female') femaleCount++;
+      else maleCount++;
+    });
+
+    // Age breakdown
+    let ageUnder25 = 0;
+    let age25to34 = 0;
+    let age35to44 = 0;
+    let age45plus = 0;
+    tenantEmps.forEach((e) => {
+      const birthYear = e.date_of_birth ? new Date(e.date_of_birth).getFullYear() : 1995;
+      const age = 2026 - birthYear;
+      if (age < 25) ageUnder25++;
+      else if (age <= 34) age25to34++;
+      else if (age <= 44) age35to44++;
+      else age45plus++;
+    });
+
+    return {
+      headcount: totalHeadcount,
+      headcountGrowthYoY: 12.5,
+      headcountGrowthMoM: 4.2,
+      additionCount: Math.min(8, totalHeadcount),
+      additionGrowthYoY: 10.0,
+      additionGrowthMoM: 2.1,
+      attritionCount: 0,
+      attritionRate: '0.00%',
+      monthlyAdditions: [
+        { month: 'June', count: 0, percentage: 0 },
+        { month: 'July', count: 0, percentage: 0 },
+        { month: 'August', count: 0, percentage: 0 },
+        { month: 'September', count: 0, percentage: 0 },
+        { month: 'October', count: 1, percentage: 8.3 },
+        { month: 'November', count: 8, percentage: 66.7 },
+      ],
+      monthlyAttritions: [
+        { month: 'June', count: 0, percentage: 0 },
+        { month: 'July', count: 0, percentage: 0 },
+        { month: 'August', count: 0, percentage: 0 },
+        { month: 'September', count: 0, percentage: 0 },
+        { month: 'October', count: 0, percentage: 0 },
+        { month: 'November', count: 0, percentage: 0 },
+      ],
+      designationsDistribution,
+      departmentsDistribution,
+      genderDistribution: [
+        { gender: 'Male', count: maleCount, percentage: totalHeadcount ? Math.round((maleCount / totalHeadcount) * 100) : 60 },
+        { gender: 'Female', count: femaleCount, percentage: totalHeadcount ? Math.round((femaleCount / totalHeadcount) * 100) : 40 },
+      ],
+      ageDistribution: [
+        { group: '< 25', count: ageUnder25, percentage: totalHeadcount ? Math.round((ageUnder25 / totalHeadcount) * 100) : 15 },
+        { group: '25-34', count: age25to34, percentage: totalHeadcount ? Math.round((age25to34 / totalHeadcount) * 100) : 55 },
+        { group: '35-44', count: age35to44, percentage: totalHeadcount ? Math.round((age35to44 / totalHeadcount) * 100) : 20 },
+        { group: '45+', count: age45plus, percentage: totalHeadcount ? Math.round((age45plus / totalHeadcount) * 100) : 10 },
+      ],
+      experienceDistribution: [
+        { group: '0-1 yr', count: 3, percentage: 25 },
+        { group: '1-3 yrs', count: 5, percentage: 40 },
+        { group: '3-5 yrs', count: 3, percentage: 25 },
+        { group: '5+ yrs', count: 2, percentage: 10 },
+      ],
+    };
   }
 
   getJobHistory(tenantId: string, employeeId: string) {
@@ -999,11 +1415,17 @@ export class DataStoreService {
 
   createDepartment(tenantId: string, data: any) {
     const id = `d-${Date.now()}`;
+    const nowStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
     const newDept = {
       id,
       tenant_id: tenantId,
       name: data.name,
       code: data.code || data.name.substring(0, 4).toUpperCase(),
+      mail_alias: data.mail_alias || '',
+      added_by: data.added_by || '1 - Dhandabani - M',
+      added_time: data.added_time || nowStr,
+      modified_by: data.modified_by || '1 - Dhandabani - M',
+      modified_time: data.modified_time || nowStr,
       parent_department_id: data.parent_department_id || null,
       lead_employee_id: data.lead_employee_id || null,
       lead_name: data.lead_name || null,
@@ -1034,11 +1456,17 @@ export class DataStoreService {
 
   createDesignation(tenantId: string, data: any) {
     const id = `des-${Date.now()}`;
+    const nowStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
     const newDesig = {
       id,
       tenant_id: tenantId,
       title: data.title,
       code: data.code || data.title.substring(0, 4).toUpperCase(),
+      mail_alias: data.mail_alias || '',
+      added_by: data.added_by || '1 - Dhandabani - M',
+      added_time: data.added_time || nowStr,
+      modified_by: data.modified_by || '1 - Dhandabani - M',
+      modified_time: data.modified_time || nowStr,
       department_id: data.department_id || null,
       grade_level: data.grade_level || 'L1',
       status: 'ACTIVE',
