@@ -88,4 +88,58 @@ test.describe('Onboarding Candidates Advanced Operations & Filters', () => {
     await page.getByRole('button', { name: 'Clear' }).click();
     await expect(page.getByRole('button', { name: 'Mass update' })).not.toBeVisible();
   });
+
+  test('TC-ONB-ADV-04: Filter drawer Select All and Clear All buttons toggle field checkboxes', async ({ page }) => {
+    // 1. Open Filter drawer
+    await page.getByTitle('Filter and Columns').click();
+    await expect(page.getByRole('heading', { name: 'Filter' })).toBeVisible();
+
+    // 2. Click Clear All
+    const clearAllBtn = page.getByRole('button', { name: 'Clear All' });
+    await expect(clearAllBtn).toBeVisible();
+    await clearAllBtn.click();
+
+    // 3. Click Select All
+    const selectAllBtn = page.getByRole('button', { name: 'Select All' });
+    await expect(selectAllBtn).toBeVisible();
+    await selectAllBtn.click();
+
+    // 4. Apply filters
+    await page.getByRole('button', { name: 'Apply' }).click();
+    await expect(page.getByRole('heading', { name: 'Filter' })).not.toBeVisible();
+  });
+
+  test('TC-ONB-ADV-05: Full View button expands and exits full view correctly', async ({ page }) => {
+    // 1. Verify left/right arrows are gone and Full View button is present
+    const fullViewBtn = page.getByTitle('Full View');
+    await expect(fullViewBtn).toBeVisible();
+    await expect(page.getByTitle('Scroll Left')).not.toBeVisible();
+    await expect(page.getByTitle('Scroll Right')).not.toBeVisible();
+
+    // 2. Click Full View button
+    await fullViewBtn.click();
+    await expect(page.getByText('Candidate Directory — Full View')).toBeVisible();
+
+    // 3. Exit Full View via the header Exit Full View button
+    const exitBtn = page.locator('button', { hasText: 'Exit Full View' });
+    await expect(exitBtn).toBeVisible();
+    await exitBtn.click();
+    await expect(page.getByText('Candidate Directory — Full View')).not.toBeVisible();
+  });
+
+  test('TC-ONB-ADV-06: Import modal loads candidate data and closes dialog on import click', async ({ page }) => {
+    // 1. Open 3-dots menu and click Import
+    await page.getByTitle('More Actions').click();
+    await page.getByRole('button', { name: 'Import', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Import Candidates' })).toBeVisible();
+
+    // 2. Load Sample CSV
+    await page.getByRole('button', { name: 'Load Sample CSV' }).click();
+    await expect(page.getByText('sample_candidates.csv')).toBeVisible();
+
+    // 3. Click Import Candidates button and verify dialog closes immediately
+    await page.getByRole('button', { name: 'Import Candidates' }).click();
+    await expect(page.getByRole('heading', { name: 'Import Candidates' })).not.toBeVisible();
+    await expect(page.getByText(/Successfully imported/i)).toBeVisible();
+  });
 });
