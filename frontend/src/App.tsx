@@ -312,6 +312,7 @@ function AppLayout() {
             <Route path="/cases" element={<CasesView />} />
             <Route path="/cases/*" element={<CasesView />} />
             <Route path="/documents" element={<DocumentsView />} />
+            <Route path="/documents/*" element={<DocumentsView />} />
             <Route path="/offboarding" element={<OffboardingView />} />
           </Routes>
         </main>
