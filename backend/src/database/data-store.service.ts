@@ -1711,6 +1711,38 @@ export class DataStoreService {
     },
   };
 
+  // Organization Files, Employee Files & HR Templates (Reference Spec)
+  private organizationFiles: any[] = [];
+
+  private employeeFiles: any[] = [];
+
+  private hrTemplates: any[] = [
+    {
+      id: 'tmpl-1',
+      tenant_id: TENANT_A_ID,
+      name: 'Company Handbook Template',
+      description: "A sample company handbook that can be edited and used to guide your employees and convey your company's vision, mission and operating policies.",
+      created_at: '2026-11-16T10:00:00.000Z',
+      created_display: 'Created on 16-Nov-2026',
+    },
+    {
+      id: 'tmpl-2',
+      tenant_id: TENANT_A_ID,
+      name: 'Employee NDA & Intellectual Property Assignment Template',
+      description: 'Standard enterprise bilateral agreement safeguarding corporate trade secrets, source code, and employee inventions.',
+      created_at: '2026-11-14T09:00:00.000Z',
+      created_display: 'Created on 14-Nov-2026',
+    },
+    {
+      id: 'tmpl-3',
+      tenant_id: TENANT_A_ID,
+      name: 'Bi-Annual Performance Appraisal & OKR Review Form',
+      description: 'Manager and peer review assessment template covering objective key results scoring and advancement milestones.',
+      created_at: '2026-11-10T14:30:00.000Z',
+      created_display: 'Created on 10-Nov-2026',
+    },
+  ];
+
   // Backwards-compatible legacy arrays for existing controller tests
   private policies = [
     {
@@ -3922,6 +3954,177 @@ export class DataStoreService {
       has_lockout: isLocked,
       locked_document: lockedDoc || null,
       overdue_count: overdueConsents.length,
+    };
+  }
+
+  // =========================================================================
+  // ORGANIZATION FILES, EMPLOYEE FILES & HR TEMPLATES
+  // =========================================================================
+  getOrganizationFiles(tenantId: string, scopeType?: string, scopeValue?: string) {
+    return this.organizationFiles.filter((f) => {
+      if (f.tenant_id !== tenantId) return false;
+      if (scopeType && f.scope_type !== scopeType) return false;
+      if (scopeValue && scopeValue !== 'All' && f.scope_value !== scopeValue) return false;
+      return true;
+    });
+  }
+
+  createOrganizationFile(tenantId: string, data: any) {
+    const id = `org-file-${Date.now()}`;
+    const folder = this.documentFolders.find((f) => f.id === data.folder_id);
+    const newFile = {
+      id,
+      tenant_id: tenantId,
+      name: data.name?.trim() ? (data.name.endsWith('.pdf') ? data.name : `${data.name}.pdf`) : 'Document.pdf',
+      description: data.description || '',
+      share_with: data.share_with || 'All',
+      scope_type: data.scope_type || 'Location',
+      scope_value: data.scope_value || 'All',
+      folder_id: data.folder_id || 'fld-1',
+      folder_name: folder?.name || data.folder_name || 'Company Policies',
+      expiry_date: data.expiry_date || null,
+      is_org_policy: Boolean(data.is_org_policy),
+      ack_type: data.ack_type || 'ACKNOWLEDGMENT',
+      has_reminder: Boolean(data.has_reminder),
+      enforce_mandatory_deadline: Boolean(data.enforce_mandatory_deadline),
+      mandatory_deadline: data.mandatory_deadline || null,
+      allow_employee_download: data.allow_employee_download !== false,
+      notify_feeds: Boolean(data.notify_feeds),
+      notify_email: Boolean(data.notify_email),
+      file_url: data.file_url || 'https://vault.cubeai.internal/org-files/document.pdf',
+      file_size: data.file_size || '2.4 MB',
+      created_at: new Date().toISOString(),
+      created_display: `Created on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+    };
+    this.organizationFiles.unshift(newFile);
+    return newFile;
+  }
+
+  deleteOrganizationFile(tenantId: string, id: string) {
+    const idx = this.organizationFiles.findIndex((f) => f.tenant_id === tenantId && f.id === id);
+    if (idx >= 0) {
+      const removed = this.organizationFiles.splice(idx, 1)[0];
+      return { success: true, removed };
+    }
+    return { success: false, message: 'Organization file not found' };
+  }
+
+  getEmployeeFilesList(tenantId: string, employeeId?: string) {
+    return this.employeeFiles.filter((f) => {
+      if (f.tenant_id !== tenantId) return false;
+      if (employeeId && f.employee_id !== employeeId) return false;
+      return true;
+    });
+  }
+
+  createEmployeeFile(tenantId: string, data: any) {
+    const id = `emp-file-${Date.now()}`;
+    const folder = this.documentFolders.find((f) => f.id === data.folder_id);
+    const emp = this.employees.find((e) => e.id === data.employee_id);
+    const employeeName = emp ? `${emp.first_name} ${emp.last_name}` : (data.employee_name || 'Designated Employee');
+
+    const newFile = {
+      id,
+      tenant_id: tenantId,
+      name: data.name?.trim() ? (data.name.endsWith('.pdf') ? data.name : `${data.name}.pdf`) : 'EmployeeFile.pdf',
+      file_access: data.file_access || 'EMPLOYEE',
+      employee_status: data.employee_status || 'ACTIVE',
+      employee_id: data.employee_id || 'e-11111111-1111-1111-1111-111111111113',
+      employee_name: employeeName,
+      description: data.description || '',
+      folder_id: data.folder_id || 'fld-3',
+      folder_name: folder?.name || data.folder_name || 'Statutory & Tax Forms',
+      has_reminder: Boolean(data.has_reminder),
+      enforce_mandatory_deadline: Boolean(data.enforce_mandatory_deadline),
+      mandatory_deadline: data.mandatory_deadline || null,
+      view_access_employee: data.view_access_employee !== false,
+      view_access_manager: Boolean(data.view_access_manager),
+      download_access_employee: data.download_access_employee !== false,
+      download_access_manager: Boolean(data.download_access_manager),
+      notify_feeds: Boolean(data.notify_feeds),
+      notify_email: Boolean(data.notify_email),
+      file_url: data.file_url || 'https://vault.cubeai.internal/emp-files/file.pdf',
+      file_size: data.file_size || '1.8 MB',
+      created_at: new Date().toISOString(),
+      created_display: `Created on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+    };
+    this.employeeFiles.unshift(newFile);
+    return newFile;
+  }
+
+  deleteEmployeeFile(tenantId: string, id: string) {
+    const idx = this.employeeFiles.findIndex((f) => f.tenant_id === tenantId && f.id === id);
+    if (idx >= 0) {
+      const removed = this.employeeFiles.splice(idx, 1)[0];
+      return { success: true, removed };
+    }
+    return { success: false, message: 'Employee file not found' };
+  }
+
+  getHrTemplates(tenantId: string) {
+    return this.hrTemplates.filter((t) => t.tenant_id === tenantId);
+  }
+
+  createHrTemplate(tenantId: string, data: any) {
+    const id = `tmpl-${Date.now()}`;
+    const newTmpl = {
+      id,
+      tenant_id: tenantId,
+      name: data.name || 'Untitled Template',
+      description: data.description || '',
+      created_at: new Date().toISOString(),
+      created_display: `Created on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`,
+    };
+    this.hrTemplates.unshift(newTmpl);
+    return newTmpl;
+  }
+
+  updateHrTemplate(tenantId: string, id: string, data: any) {
+    const tmpl = this.hrTemplates.find((t) => t.tenant_id === tenantId && t.id === id);
+    if (!tmpl) return null;
+    if (data.name) tmpl.name = data.name;
+    if (data.description !== undefined) tmpl.description = data.description;
+    return tmpl;
+  }
+
+  deleteHrTemplate(tenantId: string, id: string) {
+    const idx = this.hrTemplates.findIndex((t) => t.tenant_id === tenantId && t.id === id);
+    if (idx >= 0) {
+      const removed = this.hrTemplates.splice(idx, 1)[0];
+      return { success: true, removed };
+    }
+    return { success: false, message: 'Template not found' };
+  }
+
+  deleteHrTemplatesBulk(tenantId: string, ids: string[]) {
+    const idSet = new Set(ids);
+    const beforeCount = this.hrTemplates.length;
+    this.hrTemplates = this.hrTemplates.filter((t) => !(t.tenant_id === tenantId && idSet.has(t.id)));
+    const deletedCount = beforeCount - this.hrTemplates.length;
+    return { success: true, count: deletedCount };
+  }
+
+  mergeTemplateToOrgFile(tenantId: string, templateId: string, orgFileData?: any) {
+    const tmpl = this.hrTemplates.find((t) => t.tenant_id === tenantId && t.id === templateId);
+    if (!tmpl) return { success: false, message: 'Template not found' };
+
+    const newOrgFile = this.createOrganizationFile(tenantId, {
+      name: tmpl.name,
+      description: tmpl.description,
+      scope_type: orgFileData?.scope_type || 'Location',
+      scope_value: orgFileData?.scope_value || 'All',
+      folder_id: orgFileData?.folder_id || 'fld-1',
+      folder_name: 'Company Policies',
+      is_org_policy: true,
+      ack_type: 'ACKNOWLEDGMENT',
+      allow_employee_download: true,
+      ...orgFileData,
+    });
+
+    return {
+      success: true,
+      message: `Template "${tmpl.name}" merged and added to Organization Files.`,
+      file: newOrgFile,
     };
   }
 

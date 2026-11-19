@@ -162,7 +162,81 @@ export class DocumentsController {
     return this.documentsService.checkLockout(tenantId, employeeId || 'e-11111111-1111-1111-1111-111111111113');
   }
 
-  // 9. BACKWARDS-COMPATIBLE LEGACY ROUTES
+  // 9. ORGANIZATION FILES
+  @Get('organization-files')
+  getOrganizationFiles(
+    @CurrentTenant() tenantId: string,
+    @Query('scopeType') scopeType?: string,
+    @Query('scopeValue') scopeValue?: string,
+  ) {
+    return this.documentsService.getOrganizationFiles(tenantId, scopeType, scopeValue);
+  }
+
+  @Post('organization-files')
+  createOrganizationFile(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.documentsService.createOrganizationFile(tenantId, body);
+  }
+
+  @Delete('organization-files/:id')
+  deleteOrganizationFile(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.documentsService.deleteOrganizationFile(tenantId, id);
+  }
+
+  // 10. EMPLOYEE FILES
+  @Get('employee-files')
+  getEmployeeFiles(
+    @CurrentTenant() tenantId: string,
+    @Query('employeeId') employeeId?: string,
+  ) {
+    return this.documentsService.getEmployeeFiles(tenantId, employeeId);
+  }
+
+  @Post('employee-files')
+  createEmployeeFile(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.documentsService.createEmployeeFile(tenantId, body);
+  }
+
+  @Delete('employee-files/:id')
+  deleteEmployeeFile(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.documentsService.deleteEmployeeFile(tenantId, id);
+  }
+
+  // 11. HR FORMS & TEMPLATES
+  @Get('templates')
+  getTemplates(@CurrentTenant() tenantId: string) {
+    return this.documentsService.getTemplates(tenantId);
+  }
+
+  @Post('templates')
+  createTemplate(@CurrentTenant() tenantId: string, @Body() body: any) {
+    return this.documentsService.createTemplate(tenantId, body);
+  }
+
+  @Put('templates/:id')
+  updateTemplate(@CurrentTenant() tenantId: string, @Param('id') id: string, @Body() body: any) {
+    return this.documentsService.updateTemplate(tenantId, id, body);
+  }
+
+  @Delete('templates/:id')
+  deleteTemplate(@CurrentTenant() tenantId: string, @Param('id') id: string) {
+    return this.documentsService.deleteTemplate(tenantId, id);
+  }
+
+  @Post('templates/bulk-delete')
+  deleteTemplatesBulk(@CurrentTenant() tenantId: string, @Body() body: { ids: string[] }) {
+    return this.documentsService.deleteTemplatesBulk(tenantId, body.ids || []);
+  }
+
+  @Post('templates/:id/merge-to-org')
+  mergeTemplateToOrg(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.documentsService.mergeTemplateToOrg(tenantId, id, body);
+  }
+
+  // 12. BACKWARDS-COMPATIBLE LEGACY ROUTES
   @Get('policies')
   getPolicies(@CurrentTenant() tenantId: string) {
     return this.documentsService.getPolicies(tenantId);

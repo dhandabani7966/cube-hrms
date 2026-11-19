@@ -93,6 +93,55 @@ export class DocumentsService {
     return this.dataStore.checkUserMandatoryLockout(tenantId, employeeId);
   }
 
+  // Organization Files, Employee Files & HR Templates
+  getOrganizationFiles(tenantId: string, scopeType?: string, scopeValue?: string) {
+    return this.dataStore.getOrganizationFiles(tenantId, scopeType, scopeValue);
+  }
+
+  createOrganizationFile(tenantId: string, data: any) {
+    return this.dataStore.createOrganizationFile(tenantId, data);
+  }
+
+  deleteOrganizationFile(tenantId: string, id: string) {
+    return this.dataStore.deleteOrganizationFile(tenantId, id);
+  }
+
+  getEmployeeFiles(tenantId: string, employeeId?: string) {
+    return this.dataStore.getEmployeeFilesList(tenantId, employeeId);
+  }
+
+  createEmployeeFile(tenantId: string, data: any) {
+    return this.dataStore.createEmployeeFile(tenantId, data);
+  }
+
+  deleteEmployeeFile(tenantId: string, id: string) {
+    return this.dataStore.deleteEmployeeFile(tenantId, id);
+  }
+
+  getTemplates(tenantId: string) {
+    return this.dataStore.getHrTemplates(tenantId);
+  }
+
+  createTemplate(tenantId: string, data: any) {
+    return this.dataStore.createHrTemplate(tenantId, data);
+  }
+
+  updateTemplate(tenantId: string, id: string, data: any) {
+    return this.dataStore.updateHrTemplate(tenantId, id, data);
+  }
+
+  deleteTemplate(tenantId: string, id: string) {
+    return this.dataStore.deleteHrTemplate(tenantId, id);
+  }
+
+  deleteTemplatesBulk(tenantId: string, ids: string[]) {
+    return this.dataStore.deleteHrTemplatesBulk(tenantId, ids);
+  }
+
+  mergeTemplateToOrg(tenantId: string, templateId: string, data?: any) {
+    return this.dataStore.mergeTemplateToOrgFile(tenantId, templateId, data);
+  }
+
   // Backwards-compatible legacy methods
   getPolicies(tenantId: string) {
     return this.dataStore.getPolicies(tenantId);
