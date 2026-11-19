@@ -310,6 +310,7 @@ function AppLayout() {
             <Route path="/employees" element={<EmployeesView />} />
             <Route path="/ess" element={<EssView />} />
             <Route path="/cases" element={<CasesView />} />
+            <Route path="/cases/*" element={<CasesView />} />
             <Route path="/documents" element={<DocumentsView />} />
             <Route path="/offboarding" element={<OffboardingView />} />
           </Routes>

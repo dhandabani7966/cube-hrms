@@ -629,63 +629,524 @@ export class DataStoreService {
     },
   ];
 
-  private cases = [
-    {
-      id: 'case-11111111-1111-1111-1111-111111111111',
-      tenant_id: TENANT_A_ID,
-      case_number: 'CASE-2026-0001',
-      employee_id: 'e-11111111-1111-1111-1111-111111111113',
-      category_id: 'cat-11111111-1111-1111-1111-111111111111',
-      subject: 'Clarification regarding medical insurance coverage for dependents',
-      description: 'Need to add newborn baby to the group health insurance policy.',
-      priority: 'MEDIUM',
-      status: 'IN_PROGRESS',
-      assigned_to: 'u-11111111-1111-1111-1111-111111111111',
-      response_due_at: '2026-11-18T10:00:00.000Z',
-      resolution_due_at: '2026-11-20T18:00:00.000Z',
-      first_responded_at: '2026-11-17T09:30:00.000Z',
-      created_at: '2026-11-17T09:00:00.000Z',
-    },
-  ];
-
   private caseCategories = [
     {
       id: 'cat-11111111-1111-1111-1111-111111111111',
       tenant_id: TENANT_A_ID,
-      name: 'Benefits & Insurance',
-      code: 'BEN',
-      description: 'Queries regarding insurance, mediclaim, wellness benefits',
+      name: 'Payroll & Taxes',
+      code: 'PAY',
+      description: 'Queries regarding salary slips, Form 16, TDS deductions, loss of pay, and expense claims',
+      parent_category_id: null,
+      subcategories: ['Form 16 & Tax Slabs', 'HRA & Rent Receipts', 'Loss of Pay (LOP) Discrepancy', 'Reimbursement / Travel Claims'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111114',
+      default_sla_hours: 24,
+      restrict_priority_field: false,
+      is_active: true,
       is_confidential: false,
     },
     {
       id: 'cat-11111111-1111-1111-1111-111111111112',
       tenant_id: TENANT_A_ID,
-      name: 'Payroll & Taxation',
-      code: 'PAY',
-      description: 'Queries on payslips, Form 16, tax deductions',
+      name: 'Leave & Attendance',
+      code: 'LV',
+      description: 'Leave balance adjustments, biometric check-in anomalies, WFH & comp-off approvals',
+      parent_category_id: null,
+      subcategories: ['Leave Balance Correction', 'Biometric Punch Missed', 'Comp-Off Regularization', 'Maternity / Paternity Leave'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111114',
+      default_sla_hours: 12,
+      restrict_priority_field: false,
+      is_active: true,
       is_confidential: false,
     },
     {
       id: 'cat-11111111-1111-1111-1111-111111111113',
       tenant_id: TENANT_A_ID,
-      name: 'Grievance & POSH',
-      code: 'POSH',
-      description: 'Confidential complaints and workplace ethics',
+      name: 'Benefits & Insurance',
+      code: 'BEN',
+      description: 'Group Mediclaim, dependent additions, maternity coverage, wellness subsidies',
+      parent_category_id: null,
+      subcategories: ['Medical Insurance Dependent Addition', 'Wellness Reimbursement', 'Group Term Life Insurance'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111114',
+      default_sla_hours: 48,
+      restrict_priority_field: true,
+      is_active: true,
+      is_confidential: false,
+    },
+    {
+      id: 'cat-11111111-1111-1111-1111-111111111114',
+      tenant_id: TENANT_A_ID,
+      name: 'IT & Assets',
+      code: 'IT',
+      description: 'Developer hardware, laptops, secondary monitors, VPN access, and peripheral procurement',
+      parent_category_id: null,
+      subcategories: ['Hardware Replacement', 'Software License Request', 'VPN & Access Permissions'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111112',
+      default_sla_hours: 24,
+      restrict_priority_field: false,
+      is_active: true,
+      is_confidential: false,
+    },
+    {
+      id: 'cat-11111111-1111-1111-1111-111111111115',
+      tenant_id: TENANT_A_ID,
+      name: 'Exit & Separation',
+      code: 'EXIT',
+      description: 'Resignation workflows, FnF settlement calculations, asset return clearances, and relieving letters',
+      parent_category_id: null,
+      subcategories: ['FnF Settlement Query', 'Relieving & Experience Letter', 'Asset Handover Schedule'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111114',
+      default_sla_hours: 24,
+      restrict_priority_field: true,
+      is_active: true,
+      is_confidential: false,
+    },
+    {
+      id: 'cat-11111111-1111-1111-1111-111111111116',
+      tenant_id: TENANT_A_ID,
+      name: 'Grievance & Ethics',
+      code: 'GRV',
+      description: 'Confidential workplace grievances, POSH committee escalations, and code of conduct inquiries',
+      parent_category_id: null,
+      subcategories: ['Workplace Harassment (POSH)', 'Management Escalation', 'Code of Conduct Inquiries'],
+      default_assignee_id: 'e-11111111-1111-1111-1111-111111111111',
+      default_sla_hours: 8,
+      restrict_priority_field: false,
+      is_active: true,
       is_confidential: true,
+    },
+  ];
+
+  private cases = [
+    {
+      id: 'case-11111111-1111-1111-1111-111111111041',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1041',
+      requester_id: 'e-11111111-1111-1111-1111-111111111113', // John Doe
+      category_id: 'cat-11111111-1111-1111-1111-111111111113', // Benefits & Insurance
+      sub_category: 'Medical Insurance Dependent Addition',
+      subject: 'Clarification regarding medical insurance coverage for dependents',
+      description: 'Need to add newborn baby to the group health insurance policy. What documents are needed and what is the submission deadline?',
+      priority: 'MEDIUM',
+      status: 'IN_PROGRESS',
+      assigned_agent_id: 'e-11111111-1111-1111-1111-111111111114', // Priya Natarajan
+      assigned_team: 'HR_OPS',
+      sla_due_at: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
+      first_responded_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
+      created_at: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'case-11111111-1111-1111-1111-111111111042',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1042',
+      requester_id: 'e-11111111-1111-1111-1111-111111111112', // Sarah Jenkins
+      category_id: 'cat-11111111-1111-1111-1111-111111111111', // Payroll & Taxes
+      sub_category: 'HRA & Rent Receipts',
+      subject: 'Discrepancy in November Tax Deduction (TDS)',
+      description: 'Form 16 preview and November payslip do not reflect HRA rent receipts uploaded to the Document Vault last month. Excess TDS was deducted.',
+      priority: 'HIGH',
+      status: 'OPEN',
+      assigned_agent_id: 'e-11111111-1111-1111-1111-111111111111', // David Miller
+      assigned_team: 'PAYROLL_ADMIN',
+      sla_due_at: new Date(Date.now() + 2 * 3600 * 1000).toISOString(), // Approaching (< 4h)
+      first_responded_at: null,
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
+      created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'case-11111111-1111-1111-1111-111111111043',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1043',
+      requester_id: 'e-11111111-1111-1111-1111-111111111113', // John Doe
+      category_id: 'cat-11111111-1111-1111-1111-111111111112', // Leave & Attendance
+      sub_category: 'Biometric Punch Missed',
+      subject: 'Biometric punch missed on Nov 14 due to reader glitch',
+      description: 'Biometric device at 2nd floor entrance failed to record my punch out at 18:35 PM on Nov 14th. Please regularize attendance to avoid loss of pay.',
+      priority: 'MEDIUM',
+      status: 'WAITING_ON_EMPLOYEE',
+      assigned_agent_id: 'e-11111111-1111-1111-1111-111111111114', // Priya Natarajan
+      assigned_team: 'HR_OPS',
+      sla_due_at: new Date(Date.now() + 8 * 3600 * 1000).toISOString(),
+      first_responded_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
+      created_at: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'case-11111111-1111-1111-1111-111111111044',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1044',
+      requester_id: 'e-s16', // Andrea Garcia
+      category_id: 'cat-11111111-1111-1111-1111-111111111114', // IT & Assets
+      sub_category: 'Hardware Replacement',
+      subject: 'Developer workstation monitor replacement and ergonomic setup',
+      description: 'Secondary 4K display is flickering intermittently. Manager approved ergonomic monitor replacement.',
+      priority: 'LOW',
+      status: 'OPEN',
+      assigned_agent_id: null, // Unassigned
+      assigned_team: 'IT_SUPPORT',
+      sla_due_at: new Date(Date.now() + 36 * 3600 * 1000).toISOString(),
+      first_responded_at: null,
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
+      created_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 8 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'case-11111111-1111-1111-1111-111111111045',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1045',
+      requester_id: 'e-s15', // Aparna Acharya
+      category_id: 'cat-11111111-1111-1111-1111-111111111111', // Payroll & Taxes
+      sub_category: 'Loss of Pay (LOP) Discrepancy',
+      subject: 'Contested Loss of Pay (LOP) deduction for approved medical leave',
+      description: 'October pay slip shows 2 days loss of pay deduction even though medical leave was formally approved in the portal by manager.',
+      priority: 'URGENT',
+      status: 'ESCALATED',
+      assigned_agent_id: 'e-11111111-1111-1111-1111-111111111111', // David Miller
+      assigned_team: 'PAYROLL_ADMIN',
+      sla_due_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(), // Breached SLA!
+      first_responded_at: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
+      created_at: new Date(Date.now() - 28 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'case-11111111-1111-1111-1111-111111111046',
+      tenant_id: TENANT_A_ID,
+      ticket_number: 'CASE-1046',
+      requester_id: 'e-s14', // Emily Jones
+      category_id: 'cat-11111111-1111-1111-1111-111111111115', // Exit & Separation
+      sub_category: 'Relieving & Experience Letter',
+      subject: 'Relieving & Service Experience letter verification',
+      description: 'Need early soft copy draft of service experience certificate for visa application.',
+      priority: 'MEDIUM',
+      status: 'RESOLVED',
+      assigned_agent_id: 'e-11111111-1111-1111-1111-111111111114', // Priya Natarajan
+      assigned_team: 'HR_OPS',
+      sla_due_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+      first_responded_at: new Date(Date.now() - 22 * 3600 * 1000).toISOString(),
+      resolved_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+      closed_at: null,
+      resolution_summary: 'Verified employment tenure and dispatched stamped service certificate via email.',
+      satisfaction_rating: 5,
+      satisfaction_feedback: 'Very quick turnaround by the HR team! Thank you.',
+      created_at: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+      updated_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
     },
   ];
 
   private caseMessages = [
     {
-      id: 'cmsg-1',
+      id: 'cmsg-101',
       tenant_id: TENANT_A_ID,
-      case_id: 'case-11111111-1111-1111-1111-111111111111',
-      sender_user_id: 'u-11111111-1111-1111-1111-111111111111',
+      case_id: 'case-11111111-1111-1111-1111-111111111041',
+      sender_id: 'e-11111111-1111-1111-1111-111111111113', // John Doe
+      sender_name: 'John Doe',
+      sender_role: 'EMPLOYEE',
+      sender_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      message_body: 'Hello HR Team, our baby was born last week. What documents do I need to submit to add him to our corporate health insurance policy?',
       is_internal_note: false,
-      message: 'Hello John, please provide the birth certificate to initiate endorsement.',
-      created_at: '2026-11-17T09:30:00.000Z',
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-102',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111041',
+      sender_id: 'e-11111111-1111-1111-1111-111111111114', // Priya Natarajan
+      sender_name: 'Priya Natarajan',
+      sender_role: 'HR_ADMIN',
+      sender_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      message_body: 'Internal Note: Policy insurer allows a strict 30-day window from birth certificate date. Verified employee has active sum insured of $50,000.',
+      is_internal_note: true,
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 7 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-103',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111041',
+      sender_id: 'e-11111111-1111-1111-1111-111111111114',
+      sender_name: 'Priya Natarajan',
+      sender_role: 'HR_ADMIN',
+      sender_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      message_body: 'Congratulations John! Please upload the government birth certificate and hospital discharge summary. As per policy section 4.2, we must endorse this with the insurer within 30 days of birth.',
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-104',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111042',
+      sender_id: 'e-11111111-1111-1111-1111-111111111112', // Sarah Jenkins
+      sender_name: 'Sarah Jenkins',
+      sender_role: 'EMPLOYEE',
+      sender_avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+      message_body: 'Hi Finance, I uploaded my rent receipts of Rs. 35,000/mo along with landlord PAN to the Document Vault on Oct 25th, but November payslip shows no HRA tax exemption.',
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: ['https://vault.cubeai.internal/docs/rent_agreement_nov.pdf'],
+      created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-105',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111043',
+      sender_id: 'e-11111111-1111-1111-1111-111111111113', // John Doe
+      sender_name: 'John Doe',
+      sender_role: 'EMPLOYEE',
+      sender_avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      message_body: 'Biometric reader at the second floor entrance threw an error code 404 at 18:35 PM on Nov 14th.',
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-106',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111043',
+      sender_id: 'e-11111111-1111-1111-1111-111111111114', // Priya Natarajan
+      sender_name: 'Priya Natarajan',
+      sender_role: 'HR_ADMIN',
+      sender_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      message_body: 'Hi John, we have initiated regularisation. Please ask your reporting manager Sarah Jenkins to approve the regularisation in the ESS approval tab so we can close this ticket.',
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-107',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111045',
+      sender_id: 'e-s15', // Aparna Acharya
+      sender_name: 'Aparna Acharya',
+      sender_role: 'EMPLOYEE',
+      sender_avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+      message_body: 'Contesting LOP of Rs. 5,600 on my October pay slip. Medical certificate was uploaded and leave approved.',
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 28 * 3600 * 1000).toISOString(),
+    },
+    {
+      id: 'cmsg-108',
+      tenant_id: TENANT_A_ID,
+      case_id: 'case-11111111-1111-1111-1111-111111111045',
+      sender_id: 'sys-1',
+      sender_name: '⚡ Cube AI SLA Engine',
+      sender_role: 'SYSTEM',
+      sender_avatar: null,
+      message_body: '⚠️ Target SLA breached by 2.0 hours. Ticket status automatically escalated to URGENT and assigned to Executive Manager.',
+      is_internal_note: false,
+      is_system_activity: true,
+      attachment_urls: [],
+      created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
     },
   ];
+
+  private slaPolicies = [
+    {
+      id: 'sla-1',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111111',
+      category_name: 'Payroll & Taxes',
+      priority: 'URGENT',
+      response_time_hours: 1,
+      resolution_time_hours: 4,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: 'David Miller',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-2',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111111',
+      category_name: 'Payroll & Taxes',
+      priority: 'HIGH',
+      response_time_hours: 2,
+      resolution_time_hours: 8,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: 'David Miller',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-3',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111111',
+      category_name: 'Payroll & Taxes',
+      priority: 'MEDIUM',
+      response_time_hours: 4,
+      resolution_time_hours: 24,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: 'David Miller',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-4',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111111',
+      category_name: 'Payroll & Taxes',
+      priority: 'LOW',
+      response_time_hours: 12,
+      resolution_time_hours: 48,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: 'David Miller',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-5',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111112',
+      category_name: 'Leave & Attendance',
+      priority: 'MEDIUM',
+      response_time_hours: 4,
+      resolution_time_hours: 12,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111114',
+      escalation_manager_name: 'Priya Natarajan',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-6',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111113',
+      category_name: 'Benefits & Insurance',
+      priority: 'MEDIUM',
+      response_time_hours: 8,
+      resolution_time_hours: 48,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111114',
+      escalation_manager_name: 'Priya Natarajan',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-7',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111114',
+      category_name: 'IT & Assets',
+      priority: 'MEDIUM',
+      response_time_hours: 4,
+      resolution_time_hours: 24,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111112',
+      escalation_manager_name: 'Sarah Jenkins',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-8',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111115',
+      category_name: 'Exit & Separation',
+      priority: 'MEDIUM',
+      response_time_hours: 4,
+      resolution_time_hours: 24,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111114',
+      escalation_manager_name: 'Priya Natarajan',
+      business_hours_only: true,
+    },
+    {
+      id: 'sla-9',
+      tenant_id: TENANT_A_ID,
+      category_id: 'cat-11111111-1111-1111-1111-111111111116',
+      category_name: 'Grievance & Ethics',
+      priority: 'URGENT',
+      response_time_hours: 1,
+      resolution_time_hours: 8,
+      escalation_manager_id: 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: 'David Miller',
+      business_hours_only: false,
+    },
+  ];
+
+  private knowledgeHiveDocs = [
+    {
+      id: 'kb-doc-1',
+      title: 'Group Medical Insurance Policy 2026',
+      folder_category: 'Policies',
+      category_name: 'Benefits & Insurance',
+      read_time: '4 min read',
+      key_terms: ['insurance', 'mediclaim', 'dependent', 'baby', 'spouse', 'hospitalization', 'cashless', 'claims'],
+      excerpt: 'Covers inpatient hospitalization up to $50,000 across 6,500+ network hospitals. Dependent additions (newborn baby or legal spouse) must be filed within 30 calendar days of birth or marriage with official government birth/marriage certificates and hospital discharge summary.',
+      canned_reply: 'As per the Cube AI Group Medical Insurance Policy 2026 (Section 4.2), dependent addition must be initiated within 30 days of the birth date. Please attach the municipal birth certificate and discharge summary so we can submit the endorsement to the insurer.',
+    },
+    {
+      id: 'kb-doc-2',
+      title: 'Tax Slabs, Form 16 & HRA Proof Submission Guidelines',
+      folder_category: 'Policies',
+      category_name: 'Payroll & Taxes',
+      read_time: '5 min read',
+      key_terms: ['tax', 'tds', 'form 16', 'hra', 'rent', 'deduction', 'receipt', 'landlord', 'payroll'],
+      excerpt: 'Statutory tax declarations open annually from Nov 1 to Jan 15. HRA exemptions requiring rent receipts exceeding $1,000/mo must include landlord PAN and a registered rental agreement. Excess TDS withheld due to missing proofs is adjusted in the February payroll recalculation.',
+      canned_reply: 'Under our Corporate Tax Slabs & HRA Guidelines, rent proofs uploaded to the Document Vault require verified landlord PAN for monthly rents above $1,000. Verified proofs will be reflected and retroactively reconciled in the upcoming payroll recalculation cycle.',
+    },
+    {
+      id: 'kb-doc-3',
+      title: 'Leave & Attendance Regularization Policy 2026',
+      folder_category: 'Policies',
+      category_name: 'Leave & Attendance',
+      read_time: '3 min read',
+      key_terms: ['leave', 'attendance', 'punch', 'biometric', 'regularization', 'wfh', 'comp off', 'missed'],
+      excerpt: 'Employees must regularize missed biometric punches within 48 hours of occurrence via ESS. Maximum allowable punch regularizations per month is 3 instances without manager escalation. Earned leave accrues at 1.5 days per completed calendar month.',
+      canned_reply: 'In accordance with the Leave & Attendance Regularization Policy 2026, missed punches must be submitted through your ESS portal within 48 hours. Once your line manager gives one-click approval, the attendance record will update to Present automatically.',
+    },
+    {
+      id: 'kb-doc-4',
+      title: 'IT Hardware, Developer Workstation & Asset Lifecycle',
+      folder_category: 'Policies',
+      category_name: 'IT & Assets',
+      read_time: '4 min read',
+      key_terms: ['hardware', 'laptop', 'monitor', 'keyboard', 'ergonomic', 'display', 'screen', 'asset', 'it'],
+      excerpt: 'Developer workstations qualify for 24-month hardware refresh cycles. Defective displays or ergonomic accessories require manager pre-approval and are dispatched via internal IT depot within 24 working hours.',
+      canned_reply: 'Pursuant to the IT Hardware Asset Lifecycle, secondary display replacements are processed via internal IT logistics upon manager sign-off. Your replacement hardware order has been logged for delivery.',
+    },
+    {
+      id: 'kb-doc-5',
+      title: 'Prevention of Sexual Harassment (POSH) & Ethics Code',
+      folder_category: 'Policies',
+      category_name: 'Grievance & Ethics',
+      read_time: '6 min read',
+      key_terms: ['posh', 'harassment', 'grievance', 'ethics', 'complaint', 'conduct', 'confidential'],
+      excerpt: 'CubeAI Solutions upholds absolute zero-tolerance towards workplace harassment. All grievances submitted under this category are handled confidentially by the Internal Complaints Committee (ICC) with strict statutory SLAs of 7 business days.',
+      canned_reply: 'Your communication has been received with the highest tier of confidentiality and forwarded directly to the Internal Complaints Committee (ICC) Presiding Officer as per POSH statutory protocol.',
+    },
+    {
+      id: 'kb-doc-6',
+      title: 'Separation, Clearance & Full and Final (FnF) Settlement',
+      folder_category: 'Policies',
+      category_name: 'Exit & Separation',
+      read_time: '5 min read',
+      key_terms: ['exit', 'resignation', 'clearance', 'fnf', 'settlement', 'relieving', 'separation', 'handover'],
+      excerpt: 'Resignations require statutory 30-day notice period. Full and final settlement computation encompasses earned salary, leave encashment, and any asset recoveries. All departmental clearances (IT, Admin, HR, Finance) must be approved prior to FnF release.',
+      canned_reply: 'Regarding exit clearances, our FnF settlement procedure mandates that all departmental clearances and any open support tickets be cleared prior to final disbursement on the 10th of the following month.',
+    },
+  ];
+
+  private knowledgeHiveLastIndexed = new Date().toISOString();
 
   private policies = [
     {
@@ -1638,61 +2099,784 @@ export class DataStoreService {
   }
 
   // Help Desk / Cases
-  getCases(tenantId: string, filter?: { status?: string; priority?: string }) {
-    return this.cases.filter((c) => {
+  private calculateSlaDueAt(hours: number, businessHoursOnly: boolean = true): string {
+    const d = new Date();
+    if (!businessHoursOnly) {
+      d.setHours(d.getHours() + hours);
+      return d.toISOString();
+    }
+    let remainingHours = hours;
+    while (remainingHours > 0) {
+      d.setHours(d.getHours() + 1);
+      const day = d.getDay(); // 0: Sun, 6: Sat
+      if (day === 0 || day === 6) continue;
+      const hr = d.getHours();
+      if (hr >= 9 && hr < 18) {
+        remainingHours--;
+      }
+    }
+    return d.toISOString();
+  }
+
+  getCases(
+    tenantId: string,
+    filter?: {
+      status?: string;
+      priority?: string;
+      queue?: string;
+      category_id?: string;
+      search?: string;
+      sort?: string;
+      requester_id?: string;
+      agent_id?: string;
+      role?: string;
+    },
+  ) {
+    const now = Date.now();
+    let result = this.cases.filter((c) => {
       if (c.tenant_id !== tenantId) return false;
-      if (filter?.status && c.status !== filter.status) return false;
+      if (filter?.requester_id && c.requester_id !== filter.requester_id) return false;
+      if (filter?.category_id && c.category_id !== filter.category_id) return false;
       if (filter?.priority && c.priority !== filter.priority) return false;
+      if (filter?.status && c.status !== filter.status) return false;
+
+      // Queue filters
+      if (filter?.queue) {
+        if (filter.queue === 'unassigned') {
+          if (c.assigned_agent_id) return false;
+        } else if (filter.queue === 'my_assigned') {
+          if (filter.agent_id && c.assigned_agent_id !== filter.agent_id) return false;
+        } else if (filter.queue === 'waiting_on_employee') {
+          if (c.status !== 'WAITING_ON_EMPLOYEE') return false;
+        } else if (filter.queue === 'sla_approaching') {
+          if (['RESOLVED', 'CLOSED'].includes(c.status)) return false;
+          const due = new Date(c.sla_due_at).getTime();
+          const diffHours = (due - now) / (1000 * 3600);
+          if (diffHours < 0 || diffHours > 4) return false;
+        } else if (filter.queue === 'resolved') {
+          if (!['RESOLVED', 'CLOSED'].includes(c.status)) return false;
+        } else if (filter.queue === 'active') {
+          if (['RESOLVED', 'CLOSED'].includes(c.status)) return false;
+        }
+      }
+
+      // Search query
+      if (filter?.search) {
+        const q = filter.search.toLowerCase();
+        const matchesNum = c.ticket_number.toLowerCase().includes(q);
+        const matchesSubj = c.subject.toLowerCase().includes(q);
+        const matchesDesc = c.description.toLowerCase().includes(q);
+        const requester = this.employees.find((e) => e.id === c.requester_id);
+        const matchesReq = requester
+          ? `${requester.first_name} ${requester.last_name}`.toLowerCase().includes(q) ||
+            requester.work_email?.toLowerCase().includes(q)
+          : false;
+        if (!matchesNum && !matchesSubj && !matchesDesc && !matchesReq) return false;
+      }
+
       return true;
     });
+
+    // Enrich tickets
+    const enriched = result.map((c) => {
+      const requester = this.employees.find((e) => e.id === c.requester_id);
+      const agent = this.employees.find((e) => e.id === c.assigned_agent_id);
+      const category = this.caseCategories.find((cat) => cat.id === c.category_id);
+      const visibleMessages = this.caseMessages.filter((m) => {
+        if (m.case_id !== c.id) return false;
+        if (filter?.role === 'EMPLOYEE' && m.is_internal_note) return false;
+        return true;
+      });
+
+      const dueTime = new Date(c.sla_due_at).getTime();
+      const diffHours = Number(((dueTime - now) / (1000 * 3600)).toFixed(1));
+      let slaStatus = 'SAFE';
+      if (['RESOLVED', 'CLOSED'].includes(c.status)) {
+        slaStatus = 'RESOLVED';
+      } else if (diffHours < 0) {
+        slaStatus = 'BREACHED';
+      } else if (diffHours <= 4) {
+        slaStatus = 'APPROACHING';
+      }
+
+      const reqDept = requester ? this.departments.find((d) => d.id === requester.department_id) : null;
+      const reqDesig = requester ? this.designations.find((d) => d.id === requester.designation_id) : null;
+      const reqLoc = requester ? this.locations.find((l) => l.id === requester.location_id) : null;
+
+      return {
+        ...c,
+        requester: requester
+          ? {
+              id: requester.id,
+              employee_code: requester.employee_code,
+              first_name: requester.first_name,
+              last_name: requester.last_name,
+              work_email: requester.work_email,
+              mobile_phone: requester.mobile_phone,
+              photo: requester.photo,
+              department: reqDept ? reqDept.name : 'Engineering',
+              designation: reqDesig ? reqDesig.name : 'Principal Software Engineer',
+              location: reqLoc ? reqLoc.name : 'Bangalore HQ',
+              joining_date: requester.joining_date || '2023-01-15',
+              reporting_manager_name: 'Sarah Jenkins',
+            }
+          : null,
+        assigned_agent: agent
+          ? {
+              id: agent.id,
+              employee_code: agent.employee_code,
+              first_name: agent.first_name,
+              last_name: agent.last_name,
+              work_email: agent.work_email,
+              photo: agent.photo,
+              designation: 'HR Specialist',
+            }
+          : null,
+        category: category || null,
+        message_count: visibleMessages.length,
+        last_message: visibleMessages.length > 0 ? visibleMessages[visibleMessages.length - 1] : null,
+        sla_remaining_hours: diffHours,
+        sla_status: slaStatus,
+      };
+    });
+
+    // Sorting
+    if (filter?.sort === 'sla_due_at') {
+      enriched.sort((a, b) => new Date(a.sla_due_at).getTime() - new Date(b.sla_due_at).getTime());
+    } else if (filter?.sort === 'priority') {
+      const pWeights: Record<string, number> = { URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+      enriched.sort((a, b) => (pWeights[b.priority] || 0) - (pWeights[a.priority] || 0));
+    } else {
+      // Default: created_at desc
+      enriched.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return enriched;
   }
 
-  getCaseById(tenantId: string, id: string) {
+  getCaseById(tenantId: string, id: string, role?: string) {
     const c = this.cases.find((item) => item.tenant_id === tenantId && item.id === id);
     if (!c) return null;
-    const messages = this.caseMessages.filter((m) => m.tenant_id === tenantId && m.case_id === id);
+
+    const requester = this.employees.find((e) => e.id === c.requester_id);
+    const agent = this.employees.find((e) => e.id === c.assigned_agent_id);
     const category = this.caseCategories.find((cat) => cat.id === c.category_id);
-    return { ...c, messages, category };
+
+    const messages = this.caseMessages
+      .filter((m) => {
+        if (m.tenant_id !== tenantId || m.case_id !== id) return false;
+        if (role === 'EMPLOYEE' && m.is_internal_note) return false;
+        return true;
+      })
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    // Check active delegation for assigned agent
+    let delegationInfo = null;
+    if (c.assigned_agent_id) {
+      const activeDel = this.delegations.find(
+        (d) => d.tenant_id === tenantId && d.is_active && d.delegator_employee_id === c.assigned_agent_id,
+      );
+      if (activeDel) {
+        const delegatee = this.employees.find((e) => e.id === activeDel.delegatee_employee_id);
+        delegationInfo = {
+          is_delegated: true,
+          delegatee_id: activeDel.delegatee_employee_id,
+          delegatee_name: delegatee ? `${delegatee.first_name} ${delegatee.last_name}` : 'Priya Natarajan',
+          reason: activeDel.reason || 'Out of Office / Annual Leave',
+        };
+      }
+    }
+
+    // Contextual Leave & Attendance widget
+    let leaveContext = null;
+    const catNameLower = (category?.name || '').toLowerCase();
+    if (catNameLower.includes('leave') || catNameLower.includes('attendance')) {
+      leaveContext = {
+        balances: [
+          { type: 'Earned Leave (EL)', total: 18, used: 4, remaining: 14, accrual_rate: '1.5 days/mo' },
+          { type: 'Sick Leave (SL)', total: 10, used: 3, remaining: 7, accrual_rate: 'Annual grant' },
+          { type: 'Casual Leave (CL)', total: 6, used: 3, remaining: 3, accrual_rate: 'Annual grant' },
+        ],
+        attendance_summary: {
+          pay_period: 'November 2026',
+          present_days: 18,
+          wfh_days: 3,
+          leave_days: 1,
+          missed_punches: 1,
+          regularization_status: 'Manager approval pending',
+        },
+      };
+    }
+
+    // Contextual Payroll widget
+    let payrollContext = null;
+    if (catNameLower.includes('payroll') || catNameLower.includes('tax')) {
+      payrollContext = {
+        monthly_gross: 85000,
+        net_payable: 72400,
+        tds_withheld: 9500,
+        loss_of_pay_days: 0,
+        loss_of_pay_deductions: 0,
+        lop_log_url: '/payroll#loss-of-pay-audit',
+        form_16_status: 'Partially Submitted',
+      };
+    }
+
+    // Semantic policy recommendations from Knowledge Hive
+    const textToMatch = `${c.subject} ${c.description}`.toLowerCase();
+    const matchedDocs = this.knowledgeHiveDocs
+      .filter((doc) => {
+        return doc.key_terms.some((term) => textToMatch.includes(term.toLowerCase()));
+      })
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        category: doc.category_name,
+        read_time: doc.read_time,
+        relevance_score: '96%',
+        excerpt: doc.excerpt,
+        canned_reply: doc.canned_reply,
+      }));
+
+    const now = Date.now();
+    const dueTime = new Date(c.sla_due_at).getTime();
+    const diffHours = Number(((dueTime - now) / (1000 * 3600)).toFixed(1));
+    let slaStatus = 'SAFE';
+    if (['RESOLVED', 'CLOSED'].includes(c.status)) {
+      slaStatus = 'RESOLVED';
+    } else if (diffHours < 0) {
+      slaStatus = 'BREACHED';
+    } else if (diffHours <= 4) {
+      slaStatus = 'APPROACHING';
+    }
+
+    const reqDept = requester ? this.departments.find((d) => d.id === requester.department_id) : null;
+    const reqDesig = requester ? this.designations.find((d) => d.id === requester.designation_id) : null;
+    const reqLoc = requester ? this.locations.find((l) => l.id === requester.location_id) : null;
+
+    return {
+      ...c,
+      category: category || null,
+      requester: requester
+        ? {
+            id: requester.id,
+            employee_code: requester.employee_code,
+            first_name: requester.first_name,
+            last_name: requester.last_name,
+            work_email: requester.work_email,
+            mobile_phone: requester.mobile_phone,
+            photo: requester.photo,
+            department: reqDept ? reqDept.name : 'Engineering',
+            designation: reqDesig ? reqDesig.name : 'Principal Software Engineer',
+            location: reqLoc ? reqLoc.name : 'Bangalore HQ',
+            joining_date: requester.joining_date || '2023-01-15',
+            reporting_manager_name: 'Sarah Jenkins',
+          }
+        : null,
+      assigned_agent: agent
+        ? {
+            id: agent.id,
+            employee_code: agent.employee_code,
+            first_name: agent.first_name,
+            last_name: agent.last_name,
+            work_email: agent.work_email,
+            photo: agent.photo,
+            designation: 'HR Specialist',
+          }
+        : null,
+      messages,
+      delegation: delegationInfo,
+      leave_context: leaveContext,
+      payroll_context: payrollContext,
+      ai_recommendations: matchedDocs,
+      sla_remaining_hours: diffHours,
+      sla_status: slaStatus,
+    };
   }
 
-  createCase(tenantId: string, data: any) {
+  createCase(tenantId: string, data: any, role?: string) {
     const id = `case-${Date.now()}`;
-    const caseNumber = `CASE-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const nextSeq = 1040 + this.cases.filter((c) => c.tenant_id === tenantId).length + 1;
+    const ticketNumber = `CASE-${nextSeq}`;
+
+    const category = this.caseCategories.find((cat) => cat.id === data.category_id);
+
+    // Enforce priority restriction for standard employee role
+    let priority = data.priority || 'MEDIUM';
+    if (category?.restrict_priority_field && role === 'EMPLOYEE') {
+      priority = 'MEDIUM';
+    }
+
+    // Auto-assignment rule: if no assigned agent, route to category default_assignee_id or HR Ops
+    let assignedAgentId = data.assigned_agent_id;
+    if (!assignedAgentId && category?.default_assignee_id) {
+      assignedAgentId = category.default_assignee_id;
+    } else if (!assignedAgentId) {
+      assignedAgentId = 'e-11111111-1111-1111-1111-111111111114'; // Priya Natarajan
+    }
+
+    // SLA Calculation: check SLA policy or default_sla_hours
+    const matchedSla = this.slaPolicies.find(
+      (s) => s.tenant_id === tenantId && s.category_id === data.category_id && s.priority === priority,
+    );
+    const slaHours = matchedSla?.resolution_time_hours || category?.default_sla_hours || 24;
+    const slaDueAt = this.calculateSlaDueAt(slaHours, matchedSla ? matchedSla.business_hours_only : true);
+
+    const requesterId = data.requester_id || 'e-11111111-1111-1111-1111-111111111113'; // Default John Doe
+    const requester = this.employees.find((e) => e.id === requesterId);
+
     const newCase = {
       id,
       tenant_id: tenantId,
-      case_number: caseNumber,
+      ticket_number: ticketNumber,
+      requester_id: requesterId,
+      category_id: data.category_id || (category ? category.id : 'cat-11111111-1111-1111-1111-111111111111'),
+      sub_category: data.sub_category || null,
+      subject: data.subject || 'Support Query',
+      description: data.description || '',
+      priority: priority,
       status: 'OPEN',
+      assigned_agent_id: assignedAgentId,
+      assigned_team: category?.code === 'PAY' ? 'PAYROLL_ADMIN' : category?.code === 'IT' ? 'IT_SUPPORT' : 'HR_OPS',
+      sla_due_at: slaDueAt,
+      first_responded_at: null,
+      resolved_at: null,
+      closed_at: null,
+      resolution_summary: null,
+      satisfaction_rating: null,
+      satisfaction_feedback: null,
       created_at: new Date().toISOString(),
-      ...data,
+      updated_at: new Date().toISOString(),
     };
-    this.cases.push(newCase);
-    return newCase;
+
+    this.cases.unshift(newCase);
+
+    // Initial message
+    const initialMsg = {
+      id: `cmsg-${Date.now()}`,
+      tenant_id: tenantId,
+      case_id: id,
+      sender_id: requesterId,
+      sender_name: requester ? `${requester.first_name} ${requester.last_name}` : 'Employee',
+      sender_role: 'EMPLOYEE',
+      sender_avatar: requester?.photo || null,
+      message_body: data.description || data.subject,
+      is_internal_note: false,
+      is_system_activity: false,
+      attachment_urls: data.attachment_urls || [],
+      created_at: new Date().toISOString(),
+    };
+    this.caseMessages.push(initialMsg);
+
+    // Initial auto-assignment audit event
+    const agent = this.employees.find((e) => e.id === assignedAgentId);
+    const auditMsg = {
+      id: `cmsg-sys-${Date.now()}`,
+      tenant_id: tenantId,
+      case_id: id,
+      sender_id: 'sys-auto-assign',
+      sender_name: '⚡ Cube AI Routing Engine',
+      sender_role: 'SYSTEM',
+      sender_avatar: null,
+      message_body: `⚡ Case registered. Routed via ${category?.name || 'Category'} rule to ${agent ? `${agent.first_name} ${agent.last_name}` : 'HR Ops'}. Target SLA: ${slaHours}h.`,
+      is_internal_note: false,
+      is_system_activity: true,
+      attachment_urls: [],
+      created_at: new Date().toISOString(),
+    };
+    this.caseMessages.push(auditMsg);
+
+    return this.getCaseById(tenantId, id, role);
   }
 
-  addCaseMessage(tenantId: string, caseId: string, data: any) {
+  addCaseMessage(tenantId: string, caseId: string, data: any, role?: string) {
+    const c = this.cases.find((item) => item.tenant_id === tenantId && item.id === caseId);
+    if (!c) throw new Error('Case not found');
+
+    const isInternalNote = role === 'EMPLOYEE' ? false : Boolean(data.is_internal_note);
+    const senderId = data.sender_id || (role === 'EMPLOYEE' ? c.requester_id : (c.assigned_agent_id || 'e-11111111-1111-1111-1111-111111111114'));
+    const sender = this.employees.find((e) => e.id === senderId);
+
     const msg = {
       id: `cmsg-${Date.now()}`,
       tenant_id: tenantId,
       case_id: caseId,
+      sender_id: senderId,
+      sender_name: data.sender_name || (sender ? `${sender.first_name} ${sender.last_name}` : role === 'EMPLOYEE' ? 'Employee' : 'HR Specialist'),
+      sender_role: role === 'EMPLOYEE' ? 'EMPLOYEE' : 'HR_ADMIN',
+      sender_avatar: sender?.photo || null,
+      message_body: data.message_body || data.message || '',
+      is_internal_note: isInternalNote,
+      is_system_activity: false,
+      attachment_urls: data.attachment_urls || [],
       created_at: new Date().toISOString(),
-      ...data,
     };
+
     this.caseMessages.push(msg);
+    c.updated_at = new Date().toISOString();
+
+    // If first public reply from agent
+    if (!isInternalNote && role !== 'EMPLOYEE' && !c.first_responded_at) {
+      c.first_responded_at = new Date().toISOString();
+    }
+
+    // Status transition helper
+    if (!isInternalNote) {
+      if (role !== 'EMPLOYEE' && c.status === 'OPEN') {
+        c.status = 'IN_PROGRESS';
+      }
+    }
+
     return msg;
   }
 
-  resolveCase(tenantId: string, caseId: string, resolutionSummary: string) {
+  updateCase(tenantId: string, caseId: string, updates: any, role?: string) {
+    const c = this.cases.find((item) => item.tenant_id === tenantId && item.id === caseId);
+    if (!c) throw new Error('Case not found');
+
+    const actor = role === 'EMPLOYEE' ? 'Employee' : 'HR Agent';
+
+    if (updates.status && updates.status !== c.status) {
+      const oldStatus = c.status;
+      c.status = updates.status;
+      if (updates.status === 'RESOLVED') {
+        c.resolved_at = new Date().toISOString();
+        if (updates.resolution_summary) c.resolution_summary = updates.resolution_summary;
+      } else if (updates.status === 'CLOSED') {
+        c.closed_at = new Date().toISOString();
+      }
+      this.caseMessages.push({
+        id: `cmsg-sys-${Date.now()}`,
+        tenant_id: tenantId,
+        case_id: caseId,
+        sender_id: 'sys',
+        sender_name: '⚡ Cube AI System',
+        sender_role: 'SYSTEM',
+        sender_avatar: null,
+        message_body: `⚡ Status changed from ${oldStatus} to ${updates.status} by ${actor}.`,
+        is_internal_note: false,
+        is_system_activity: true,
+        attachment_urls: [],
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    if (updates.priority && updates.priority !== c.priority) {
+      const oldPrio = c.priority;
+      c.priority = updates.priority;
+      this.caseMessages.push({
+        id: `cmsg-sys-${Date.now()}`,
+        tenant_id: tenantId,
+        case_id: caseId,
+        sender_id: 'sys',
+        sender_name: '⚡ Cube AI System',
+        sender_role: 'SYSTEM',
+        sender_avatar: null,
+        message_body: `⚡ Priority updated from ${oldPrio} to ${updates.priority} by ${actor}.`,
+        is_internal_note: false,
+        is_system_activity: true,
+        attachment_urls: [],
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    if (updates.assigned_agent_id !== undefined && updates.assigned_agent_id !== c.assigned_agent_id) {
+      c.assigned_agent_id = updates.assigned_agent_id;
+      const newAgent = this.employees.find((e) => e.id === updates.assigned_agent_id);
+      this.caseMessages.push({
+        id: `cmsg-sys-${Date.now()}`,
+        tenant_id: tenantId,
+        case_id: caseId,
+        sender_id: 'sys',
+        sender_name: '⚡ Cube AI System',
+        sender_role: 'SYSTEM',
+        sender_avatar: null,
+        message_body: `⚡ Ticket reassigned to ${newAgent ? `${newAgent.first_name} ${newAgent.last_name}` : 'Unassigned'} by ${actor}.`,
+        is_internal_note: false,
+        is_system_activity: true,
+        attachment_urls: [],
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    if (updates.category_id && updates.category_id !== c.category_id) {
+      c.category_id = updates.category_id;
+      const newCat = this.caseCategories.find((cat) => cat.id === updates.category_id);
+      this.caseMessages.push({
+        id: `cmsg-sys-${Date.now()}`,
+        tenant_id: tenantId,
+        case_id: caseId,
+        sender_id: 'sys',
+        sender_name: '⚡ Cube AI System',
+        sender_role: 'SYSTEM',
+        sender_avatar: null,
+        message_body: `⚡ Category changed to ${newCat?.name || updates.category_id}.`,
+        is_internal_note: false,
+        is_system_activity: true,
+        attachment_urls: [],
+        created_at: new Date().toISOString(),
+      });
+    }
+
+    c.updated_at = new Date().toISOString();
+    return this.getCaseById(tenantId, caseId, role);
+  }
+
+  resolveCase(tenantId: string, caseId: string, resolutionSummary: string, agentName?: string) {
     const c = this.cases.find((item) => item.tenant_id === tenantId && item.id === caseId);
     if (!c) throw new Error('Case not found');
     c.status = 'RESOLVED';
-    (c as any).resolved_at = new Date().toISOString();
-    (c as any).resolution_summary = resolutionSummary;
+    c.resolved_at = new Date().toISOString();
+    c.resolution_summary = resolutionSummary || 'Query answered and verified.';
+    c.updated_at = new Date().toISOString();
+
+    this.caseMessages.push({
+      id: `cmsg-sys-${Date.now()}`,
+      tenant_id: tenantId,
+      case_id: caseId,
+      sender_id: 'sys',
+      sender_name: '⚡ Cube AI System',
+      sender_role: 'SYSTEM',
+      sender_avatar: null,
+      message_body: `✅ Case resolved by ${agentName || 'HR Agent'}. Summary: ${c.resolution_summary}`,
+      is_internal_note: false,
+      is_system_activity: true,
+      attachment_urls: [],
+      created_at: new Date().toISOString(),
+    });
+
     return c;
   }
 
+  rateCase(tenantId: string, caseId: string, rating: number, feedback?: string) {
+    const c = this.cases.find((item) => item.tenant_id === tenantId && item.id === caseId);
+    if (!c) throw new Error('Case not found');
+    c.satisfaction_rating = rating;
+    c.satisfaction_feedback = feedback || null;
+    c.updated_at = new Date().toISOString();
+
+    this.caseMessages.push({
+      id: `cmsg-sys-${Date.now()}`,
+      tenant_id: tenantId,
+      case_id: caseId,
+      sender_id: 'sys',
+      sender_name: '⚡ Cube AI System',
+      sender_role: 'SYSTEM',
+      sender_avatar: null,
+      message_body: `⭐ Requester submitted satisfaction rating: ${rating} / 5${feedback ? ` ("${feedback}")` : ''}.`,
+      is_internal_note: false,
+      is_system_activity: true,
+      attachment_urls: [],
+      created_at: new Date().toISOString(),
+    });
+
+    return c;
+  }
+
+  runEscalationCheck(tenantId: string) {
+    const now = Date.now();
+    let escalatedCount = 0;
+
+    for (const c of this.cases) {
+      if (c.tenant_id !== tenantId) continue;
+      if (['RESOLVED', 'CLOSED'].includes(c.status)) continue;
+      if (c.status === 'ESCALATED') continue;
+
+      const due = new Date(c.sla_due_at).getTime();
+      if (now > due) {
+        c.status = 'ESCALATED';
+        c.priority = 'URGENT';
+        c.updated_at = new Date().toISOString();
+        escalatedCount++;
+
+        const overdueHours = ((now - due) / (1000 * 3600)).toFixed(1);
+        this.caseMessages.push({
+          id: `cmsg-sys-${Date.now()}-${escalatedCount}`,
+          tenant_id: tenantId,
+          case_id: c.id,
+          sender_id: 'sys',
+          sender_name: '⚡ Cube AI SLA Escalation Engine',
+          sender_role: 'SYSTEM',
+          sender_avatar: null,
+          message_body: `⚠️ Target SLA breached by ${overdueHours} hours. Ticket escalated to URGENT and alert dispatched to Escalation Manager.`,
+          is_internal_note: false,
+          is_system_activity: true,
+          attachment_urls: [],
+          created_at: new Date().toISOString(),
+        });
+      }
+    }
+
+    return { escalated_count: escalatedCount, checked_at: new Date().toISOString() };
+  }
+
   getCaseCategories(tenantId: string) {
-    return this.caseCategories.filter((c) => c.tenant_id === tenantId);
+    return this.caseCategories
+      .filter((c) => c.tenant_id === tenantId)
+      .map((cat) => {
+        const assignee = this.employees.find((e) => e.id === cat.default_assignee_id);
+        const subCats = this.caseCategories.filter((sc) => sc.parent_category_id === cat.id);
+        return {
+          ...cat,
+          default_assignee_name: assignee ? `${assignee.first_name} ${assignee.last_name}` : 'Unassigned',
+          sub_categories_list: cat.subcategories || subCats.map((sc) => sc.name),
+        };
+      });
+  }
+
+  createCaseCategory(tenantId: string, data: any) {
+    const id = `cat-${Date.now()}`;
+    const newCat = {
+      id,
+      tenant_id: tenantId,
+      name: data.name,
+      code: data.code || data.name.substring(0, 3).toUpperCase(),
+      description: data.description || '',
+      parent_category_id: data.parent_category_id || null,
+      subcategories: data.subcategories || [],
+      default_assignee_id: data.default_assignee_id || null,
+      default_sla_hours: Number(data.default_sla_hours) || 24,
+      restrict_priority_field: Boolean(data.restrict_priority_field),
+      is_active: data.is_active !== undefined ? Boolean(data.is_active) : true,
+      is_confidential: Boolean(data.is_confidential),
+    };
+    this.caseCategories.push(newCat);
+    return newCat;
+  }
+
+  updateCaseCategory(tenantId: string, id: string, data: any) {
+    const cat = this.caseCategories.find((c) => c.tenant_id === tenantId && c.id === id);
+    if (!cat) throw new Error('Category not found');
+    Object.assign(cat, data);
+    return cat;
+  }
+
+  getSlaPolicies(tenantId: string) {
+    return this.slaPolicies
+      .filter((s) => s.tenant_id === tenantId)
+      .map((s) => {
+        const cat = this.caseCategories.find((c) => c.id === s.category_id);
+        const mgr = this.employees.find((e) => e.id === s.escalation_manager_id);
+        return {
+          ...s,
+          category_name: cat ? cat.name : s.category_name,
+          escalation_manager_name: mgr ? `${mgr.first_name} ${mgr.last_name}` : s.escalation_manager_name,
+        };
+      });
+  }
+
+  saveSlaPolicy(tenantId: string, data: any) {
+    const existing = this.slaPolicies.find(
+      (s) => s.tenant_id === tenantId && s.category_id === data.category_id && s.priority === data.priority,
+    );
+    if (existing) {
+      Object.assign(existing, data);
+      return existing;
+    }
+    const newPolicy = {
+      id: `sla-${Date.now()}`,
+      tenant_id: tenantId,
+      category_id: data.category_id,
+      category_name: data.category_name || 'General',
+      priority: data.priority || 'MEDIUM',
+      response_time_hours: Number(data.response_time_hours) || 4,
+      resolution_time_hours: Number(data.resolution_time_hours) || 24,
+      escalation_manager_id: data.escalation_manager_id || 'e-11111111-1111-1111-1111-111111111111',
+      escalation_manager_name: data.escalation_manager_name || 'David Miller',
+      business_hours_only: data.business_hours_only !== undefined ? Boolean(data.business_hours_only) : true,
+    };
+    this.slaPolicies.push(newPolicy);
+    return newPolicy;
+  }
+
+  getKnowledgeHiveStatus(tenantId: string) {
+    return {
+      tenant_id: tenantId,
+      total_documents: this.knowledgeHiveDocs.length,
+      index_health: 'HEALTHY',
+      last_indexed_at: this.knowledgeHiveLastIndexed,
+      indexed_policies: this.knowledgeHiveDocs.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        category: doc.category_name,
+        read_time: doc.read_time,
+        excerpt: doc.excerpt,
+        key_terms: doc.key_terms,
+      })),
+    };
+  }
+
+  reindexKnowledgeHive(tenantId: string) {
+    this.knowledgeHiveLastIndexed = new Date().toISOString();
+    return this.getKnowledgeHiveStatus(tenantId);
+  }
+
+  getPolicyRecommendations(tenantId: string, query: string) {
+    if (!query) return [];
+    const q = query.toLowerCase();
+    return this.knowledgeHiveDocs
+      .filter((doc) => {
+        const matchTitle = doc.title.toLowerCase().includes(q);
+        const matchTerms = doc.key_terms.some((t) => q.includes(t.toLowerCase()) || t.toLowerCase().includes(q));
+        const matchExcerpt = doc.excerpt.toLowerCase().includes(q);
+        return matchTitle || matchTerms || matchExcerpt;
+      })
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        category: doc.category_name,
+        read_time: doc.read_time,
+        relevance_score: '98%',
+        excerpt: doc.excerpt,
+        canned_reply: doc.canned_reply,
+      }));
+  }
+
+  getEmployeeCasesContext(tenantId: string, employeeId: string) {
+    const emp = this.employees.find((e) => e.tenant_id === tenantId && e.id === employeeId);
+    const openTickets = this.cases.filter(
+      (c) => c.tenant_id === tenantId && c.requester_id === employeeId && !['RESOLVED', 'CLOSED'].includes(c.status),
+    );
+    return {
+      employee: emp,
+      open_tickets_count: openTickets.length,
+      leave_balances: [
+        { type: 'Earned Leave', remaining: 14, total: 18 },
+        { type: 'Sick Leave', remaining: 7, total: 10 },
+        { type: 'Casual Leave', remaining: 3, total: 6 },
+      ],
+      attendance_summary: {
+        pay_period: 'November 2026',
+        present: 18,
+        wfh: 3,
+        missed_punches: 1,
+      },
+      payroll_lop_status: {
+        lop_days: 0,
+        lop_deduction_amount: 0,
+        gross_salary: 85000,
+      },
+    };
+  }
+
+  checkUnresolvedCasesForOffboarding(tenantId: string, employeeId: string) {
+    const unresolved = this.cases.filter(
+      (c) =>
+        c.tenant_id === tenantId &&
+        (c.requester_id === employeeId || c.assigned_agent_id === employeeId) &&
+        !['RESOLVED', 'CLOSED'].includes(c.status),
+    );
+    return {
+      has_unresolved: unresolved.length > 0,
+      unresolved_count: unresolved.length,
+      tickets: unresolved.map((c) => ({
+        id: c.id,
+        ticket_number: c.ticket_number,
+        subject: c.subject,
+        status: c.status,
+        priority: c.priority,
+      })),
+    };
   }
 
   // Documents & Compliance
@@ -1762,6 +2946,19 @@ export class DataStoreService {
   updateClearanceItem(tenantId: string, itemId: string, status: string, holdReason?: string, amount?: number) {
     const item = this.exitClearanceItems.find((c) => c.tenant_id === tenantId && c.id === itemId);
     if (!item) throw new Error('Clearance item not found');
+
+    if (status === 'CLEARED' && (item.department === 'HR' || item.item_name?.toLowerCase().includes('hr'))) {
+      const exitReq = this.exitRequests.find((r) => r.id === item.exit_request_id);
+      if (exitReq) {
+        const unresolved = this.checkUnresolvedCasesForOffboarding(tenantId, exitReq.employee_id);
+        if (unresolved.has_unresolved) {
+          throw new Error(
+            `Cannot complete HR clearance: Exiting employee has ${unresolved.unresolved_count} unresolved help desk cases (${unresolved.tickets.map((t: any) => t.ticket_number).join(', ')}). All cases must be resolved or reassigned before HR sign-off.`,
+          );
+        }
+      }
+    }
+
     item.status = status;
     if (holdReason) item.hold_reason = holdReason;
     if (amount !== undefined) item.recovery_amount = amount;
