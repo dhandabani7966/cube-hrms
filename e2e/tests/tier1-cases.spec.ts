@@ -13,7 +13,7 @@ test.describe('Tier 1: Module 4 — HR Help Desk & Cases (Cube AI Solutions)', (
     await expect(page.getByRole('button', { name: /My Cases \(Self\)/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Operations \(Team\/HR\)/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /Settings \(Admin\)/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Raise New Case/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Raise New Case/i }).first()).toBeVisible();
   });
 
   test('TC-T1-CASE-02: Operations Console renders ticket queues, categories, and SLA countdowns', async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe('Tier 1: Module 4 — HR Help Desk & Cases (Cube AI Solutions)', (
     await page.getByRole('button', { name: /Save Note/i }).click();
 
     // Verify amber note appears in thread
-    await expect(page.getByText('Confidential audit note: verified with insurer representative over phone.')).toBeVisible();
+    await expect(page.getByText('Confidential audit note: verified with insurer representative over phone.').first()).toBeVisible();
   });
 
   test('TC-T1-CASE-05: Cube AI Knowledge Recommendations and Insert into Reply', async ({ page }) => {
